@@ -1,0 +1,431 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "基于fuint-uniapp项目的代码检索测试数据集",
+    "created_date": "2024-12-19",
+    "total_cases": 20,
+    "categories": ["style", "function", "layout", "api"]
+  },
+  "test_cases": [
+    {
+      "idx": "fuint-test-001",
+      "query": "积分商品列表样式",
+      "category": "style",
+      "description": "测试积分兑换页面商品列表的CSS样式检索",
+      "expected_results": [
+        {
+          "path": "pages\\points\\exchange.vue",
+          "relevance_score": 1.0,
+          "reason": "包含积分商品列表的完整样式定义",
+          "expected_keywords": ["goods-list", "goods-item", "point-price"]
+        },
+        {
+          "path": "pages\\coupon\\list.vue",
+          "relevance_score": 0.6,
+          "reason": "包含类似的商品列表布局样式",
+          "expected_keywords": ["list", "item", "card"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-002", 
+      "query": "用户登录接口调用",
+      "category": "api",
+      "description": "测试用户登录相关API接口的检索",
+      "expected_results": [
+        {
+          "path": "api\\login\\login.js",
+          "relevance_score": 1.0,
+          "reason": "用户登录的主要API接口文件",
+          "expected_keywords": ["login", "user", "auth"]
+        },
+        {
+          "path": "api\\user\\user.js", 
+          "relevance_score": 0.7,
+          "reason": "用户相关的API接口，可能包含登录功能",
+          "expected_keywords": ["user", "api", "request"]
+        }
+      ],
+      "weight": 1.2
+    },
+    {
+      "idx": "fuint-test-003",
+      "query": "优惠券卡片设计",
+      "category": "style",
+      "description": "测试优惠券展示卡片的样式设计检索", 
+      "expected_results": [
+        {
+          "path": "pages\\coupon\\list.vue",
+          "relevance_score": 1.0,
+          "reason": "优惠券列表页面，包含卡片样式",
+          "expected_keywords": ["coupon", "card", "style"]
+        },
+        {
+          "path": "pages\\my-coupon\\list.vue",
+          "relevance_score": 0.9,
+          "reason": "我的优惠券页面，包含卡片展示",
+          "expected_keywords": ["my-coupon", "card", "design"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-004",
+      "query": "商品添加到购物车",
+      "category": "function",
+      "description": "测试添加商品到购物车功能的检索",
+      "expected_results": [
+        {
+          "path": "api\\cart.js",
+          "relevance_score": 1.0,
+          "reason": "购物车相关API接口",
+          "expected_keywords": ["cart", "add", "goods"]
+        },
+        {
+          "path": "pages\\goods\\detail.vue",
+          "relevance_score": 0.8,
+          "reason": "商品详情页面，包含加购功能",
+          "expected_keywords": ["addToCart", "goods", "buy"]
+        }
+      ],
+      "weight": 1.2
+    },
+    {
+      "idx": "fuint-test-005",
+      "query": "页面导航布局",
+      "category": "layout", 
+      "description": "测试页面导航和布局相关的检索",
+      "expected_results": [
+        {
+          "path": "App.vue",
+          "relevance_score": 0.9,
+          "reason": "应用主入口，包含全局导航布局",
+          "expected_keywords": ["navigation", "layout", "router"]
+        },
+        {
+          "path": "components\\navigation.vue",
+          "relevance_score": 1.0,
+          "reason": "导航组件文件",
+          "expected_keywords": ["nav", "menu", "navigation"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-006",
+      "query": "订单提交流程",
+      "category": "function",
+      "description": "测试订单提交相关功能的检索",
+      "expected_results": [
+        {
+          "path": "api\\order.js",
+          "relevance_score": 1.0,
+          "reason": "订单相关API接口",
+          "expected_keywords": ["order", "submit", "create"]
+        },
+        {
+          "path": "pages\\confirm\\confirm.vue", 
+          "relevance_score": 0.9,
+          "reason": "订单确认页面",
+          "expected_keywords": ["confirm", "submit", "order"]
+        }
+      ],
+      "weight": 1.2
+    },
+    {
+      "idx": "fuint-test-007",
+      "query": "按钮渐变效果样式",
+      "category": "style",
+      "description": "测试按钮渐变背景样式的检索",
+      "expected_results": [
+        {
+          "path": "pages\\points\\exchange.vue",
+          "relevance_score": 0.8,
+          "reason": "包含渐变按钮样式",
+          "expected_keywords": ["gradient", "button", "background"]
+        },
+        {
+          "path": "common\\style\\button.scss",
+          "relevance_score": 1.0, 
+          "reason": "通用按钮样式文件",
+          "expected_keywords": ["button", "gradient", "linear-gradient"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-008",
+      "query": "用户个人中心页面",
+      "category": "layout",
+      "description": "测试用户个人中心页面布局的检索", 
+      "expected_results": [
+        {
+          "path": "pages\\user\\index.vue",
+          "relevance_score": 1.0,
+          "reason": "用户个人中心主页面",
+          "expected_keywords": ["user", "profile", "center"]
+        },
+        {
+          "path": "pages\\my-coupon\\index.vue",
+          "relevance_score": 0.6,
+          "reason": "个人中心相关子页面",
+          "expected_keywords": ["my", "user", "personal"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-009",
+      "query": "积分兑换接口",
+      "category": "api",
+      "description": "测试积分兑换相关API接口的检索",
+      "expected_results": [
+        {
+          "path": "api\\points\\exchange.js",
+          "relevance_score": 1.0,
+          "reason": "积分兑换专用API",
+          "expected_keywords": ["points", "exchange", "redeem"]
+        },
+        {
+          "path": "api\\points\\points.js",
+          "relevance_score": 0.8,
+          "reason": "积分相关通用API",
+          "expected_keywords": ["points", "api", "balance"]
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "idx": "fuint-test-010",
+      "query": "商品图片展示组件",
+      "category": "layout",
+      "description": "测试商品图片展示组件的检索",
+      "expected_results": [
+        {
+          "path": "components\\goods-image.vue",
+          "relevance_score": 1.0,
+          "reason": "商品图片展示组件",
+          "expected_keywords": ["goods", "image", "picture"]
+        },
+        {
+          "path": "pages\\goods\\detail.vue",
+          "relevance_score": 0.7,
+          "reason": "商品详情页包含图片展示",
+          "expected_keywords": ["goods", "detail", "image"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-011",
+      "query": "无数据展示样式",
+      "category": "style",
+      "description": "测试列表为空时的无数据展示样式",
+      "expected_results": [
+        {
+          "path": "pages\\points\\exchange.vue",
+          "relevance_score": 0.9,
+          "reason": "包含无数据展示样式",
+          "expected_keywords": ["no-data", "empty", "placeholder"]
+        },
+        {
+          "path": "components\\empty-state.vue",
+          "relevance_score": 1.0,
+          "reason": "专用的空状态组件",
+          "expected_keywords": ["empty", "no-data", "state"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-012",
+      "query": "微信支付集成",
+      "category": "function",
+      "description": "测试微信支付功能集成的检索",
+      "expected_results": [
+        {
+          "path": "api\\payment\\wechat.js",
+          "relevance_score": 1.0,
+          "reason": "微信支付专用API",
+          "expected_keywords": ["wechat", "payment", "pay"]
+        },
+        {
+          "path": "utils\\payment.js",
+          "relevance_score": 0.8,
+          "reason": "支付相关工具函数",
+          "expected_keywords": ["payment", "util", "wechat"]
+        }
+      ],
+      "weight": 1.2
+    },
+    {
+      "idx": "fuint-test-013",
+      "query": "商户店铺列表",
+      "category": "layout",
+      "description": "测试商户店铺列表页面布局的检索",
+      "expected_results": [
+        {
+          "path": "pages\\merchant\\list.vue",
+          "relevance_score": 1.0,
+          "reason": "商户列表页面",
+          "expected_keywords": ["merchant", "list", "shop"]
+        },
+        {
+          "path": "api\\merchant.js",
+          "relevance_score": 0.6,
+          "reason": "商户相关API接口",
+          "expected_keywords": ["merchant", "api", "store"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-014",
+      "query": "表单验证功能",
+      "category": "function", 
+      "description": "测试表单输入验证功能的检索",
+      "expected_results": [
+        {
+          "path": "utils\\validate.js",
+          "relevance_score": 1.0,
+          "reason": "表单验证工具函数",
+          "expected_keywords": ["validate", "form", "check"]
+        },
+        {
+          "path": "pages\\login\\login.vue",
+          "relevance_score": 0.7,
+          "reason": "登录页面包含表单验证",
+          "expected_keywords": ["form", "validate", "input"]
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "idx": "fuint-test-015",
+      "query": "弹性布局实现",
+      "category": "style",
+      "description": "测试CSS弹性布局的实现检索",
+      "expected_results": [
+        {
+          "path": "common\\style\\layout.scss",
+          "relevance_score": 1.0,
+          "reason": "通用布局样式文件",
+          "expected_keywords": ["flex", "layout", "display"]
+        },
+        {
+          "path": "pages\\index\\index.vue",
+          "relevance_score": 0.6,
+          "reason": "首页包含弹性布局",
+          "expected_keywords": ["flex", "display", "layout"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-016",
+      "query": "图片上传功能",
+      "category": "function",
+      "description": "测试图片上传相关功能的检索",
+      "expected_results": [
+        {
+          "path": "api\\upload.js",
+          "relevance_score": 1.0,
+          "reason": "文件上传API接口",
+          "expected_keywords": ["upload", "image", "file"]
+        },
+        {
+          "path": "components\\image-upload.vue",
+          "relevance_score": 1.0,
+          "reason": "图片上传组件",
+          "expected_keywords": ["upload", "image", "component"]
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "idx": "fuint-test-017",
+      "query": "圆角边框样式",
+      "category": "style",
+      "description": "测试圆角边框CSS样式的检索",
+      "expected_results": [
+        {
+          "path": "pages\\points\\exchange.vue",
+          "relevance_score": 0.7,
+          "reason": "包含圆角样式",
+          "expected_keywords": ["border-radius", "rounded", "corner"]
+        },
+        {
+          "path": "common\\style\\base.scss",
+          "relevance_score": 0.9,
+          "reason": "基础样式文件",
+          "expected_keywords": ["border-radius", "style", "base"]
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "idx": "fuint-test-018",
+      "query": "数据本地存储",
+      "category": "function",
+      "description": "测试本地数据存储功能的检索",
+      "expected_results": [
+        {
+          "path": "utils\\storage.js",
+          "relevance_score": 1.0,
+          "reason": "本地存储工具函数",
+          "expected_keywords": ["storage", "localStorage", "cache"]
+        },
+        {
+          "path": "store\\index.js",
+          "relevance_score": 0.8,
+          "reason": "状态管理存储",
+          "expected_keywords": ["store", "state", "vuex"]
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "idx": "fuint-test-019",
+      "query": "页面跳转导航",
+      "category": "function",
+      "description": "测试页面路由跳转功能的检索",
+      "expected_results": [
+        {
+          "path": "utils\\navigation.js",
+          "relevance_score": 1.0,
+          "reason": "导航跳转工具函数",
+          "expected_keywords": ["navigation", "router", "navigate"]
+        },
+        {
+          "path": "pages.json",
+          "relevance_score": 0.8,
+          "reason": "页面路由配置",
+          "expected_keywords": ["pages", "router", "path"]
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "idx": "fuint-test-020",
+      "query": "加载状态提示",
+      "category": "style",
+      "description": "测试加载状态提示样式的检索",
+      "expected_results": [
+        {
+          "path": "components\\loading.vue",
+          "relevance_score": 1.0,
+          "reason": "加载状态组件",
+          "expected_keywords": ["loading", "spinner", "progress"]
+        },
+        {
+          "path": "common\\style\\loading.scss",
+          "relevance_score": 0.9,
+          "reason": "加载样式文件",
+          "expected_keywords": ["loading", "animation", "spinner"]
+        }
+      ],
+      "weight": 1.0
+    }
+  ]
+} 
