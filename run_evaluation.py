@@ -24,7 +24,8 @@ from utils.result_formatter import format_evaluation_result, print_formatted_res
 
 def setup_logging(debug=False):
     """设置日志配置"""
-    level = logging.DEBUG if debug else getattr(logging, LOGGING_CONFIG["level"])
+    # 在debug模式下使用INFO级别，否则使用WARNING级别
+    level = logging.INFO if debug else logging.WARNING
     
     # 创建格式化器
     formatter = logging.Formatter(LOGGING_CONFIG["format"])
@@ -150,7 +151,7 @@ def run_evaluation(args):
             generate_reports(results, timestamp)
         
         # 显示简要结果
-        show_summary(results)
+        show_summary(results, args.debug)
         
         # 识别问题查询
         if args.show_problems:
@@ -263,102 +264,79 @@ def generate_summary_report(results, output_path):
         f.write(f"  F1分数: {overall['avg_f1_score']:.3f}\n")
         f.write(f"  MRR: {overall['avg_mrr']:.3f}\n")
 
-def show_summary(results):
+def show_summary(results, debug=False):
     """显示评估结果摘要"""
-    print("\n" + "="*60)
-    print("📊 代码检索评估结果摘要")
-    print("="*60)
-    
-    meta = results["meta"]
-    summary = results["summary_metrics"]
-    
-    print(f"⏰ 评估时间: {meta['evaluation_time']}")
-    print(f"📋 测试案例: {meta['total_test_cases']} (成功: {meta['successful_evaluations']})")
-    print(f"✅ 成功率: {summary['evaluation_statistics']['success_rate']:.1%}")
-    
-    # 使用格式化工具添加详细解释
-    formatted_summary = format_summary_with_explanations(summary)
-    
-    print("\n🎯 新评估框架整体表现:")
-    if "new_framework_performance" in summary:
-        new_framework = summary["new_framework_performance"]
-        weights = new_framework.get("framework_weights", {})
+    if not debug:
+        print("\n" + "="*60)
+        print("代码检索评估结果摘要")
+        print("="*60)
         
-        # 总分
-        total_score = new_framework["avg_total_score"]
-        total_interp = get_total_score_interpretation(total_score)
-        print(f"  {total_interp['color']} 平均综合评分: {total_score:.3f} ({total_interp['level']})")
-        print(f"     💡 {total_interp.get('advice', '')}")
+        meta = results["meta"]
+        summary = results["summary_metrics"]
         
-        # 三个维度
-        dimensions = [
-            ("avg_relevance", "平均相关性", weights.get("relevance", 0.5)),
-            ("avg_completeness", "平均全面性", weights.get("completeness", 0.3)),
-            ("avg_usability", "平均可用性", weights.get("usability", 0.2))
-        ]
+        print(f"评估时间: {meta['evaluation_time']}")
+        print(f"测试案例: {meta['total_test_cases']} (成功: {meta['successful_evaluations']})")
+        print(f"成功率: {summary['evaluation_statistics']['success_rate']:.1%}")
         
-        for metric_key, metric_name, weight in dimensions:
-            value = new_framework.get(metric_key, 0.0)
-            interp = get_score_interpretation(value)
-            print(f"  {interp['color']} {metric_name}: {value:.3f} ({interp['level']}) - 权重: {weight*100:.0f}%")
-    
-    # 传统指标对比
-    if "traditional_performance" in summary:
-        traditional = summary["traditional_performance"]
-        print(f"\n📈 传统指标对比:")
-        print(f"  📐 平均精确率: {traditional['avg_precision']:.3f}")
-        print(f"  🎪 平均召回率: {traditional['avg_recall']:.3f}")
-        print(f"  ⚖️ 平均F1分数: {traditional['avg_f1_score']:.3f}")
+        # 使用格式化工具添加详细解释
+        formatted_summary = format_summary_with_explanations(summary)
+        
+        print("\n新评估框架整体表现:")
+        if "new_framework_performance" in summary:
+            new_framework = summary["new_framework_performance"]
+            weights = new_framework.get("framework_weights", {})
+            
+            # 总分
+            total_score = new_framework["avg_total_score"]
+            total_interp = get_total_score_interpretation(total_score)
+            print(f"  平均综合评分: {total_score:.3f} ({total_interp['level']})")
+            print(f"     {total_interp.get('advice', '')}")
+            
+            # 三个维度
+            dimensions = [
+                ("avg_relevance", "平均相关性", weights.get("relevance", 0.5)),
+                ("avg_completeness", "平均全面性", weights.get("completeness", 0.3)),
+                ("avg_usability", "平均可用性", weights.get("usability", 0.2))
+            ]
+            
+            for metric_key, metric_name, weight in dimensions:
+                value = new_framework.get(metric_key, 0.0)
+                interp = get_score_interpretation(value)
+                print(f"  {metric_name}: {value:.3f} ({interp['level']}) - 权重: {weight*100:.0f}%")
+        
+        # 传统指标对比
+        if "traditional_performance" in summary:
+            traditional = summary["traditional_performance"]
+            print(f"\n传统指标对比:")
+            print(f"  平均精确率: {traditional['avg_precision']:.3f}")
+            print(f"  平均召回率: {traditional['avg_recall']:.3f}")
+            print(f"  平均F1分数: {traditional['avg_f1_score']:.3f}")
 
 def get_total_score_interpretation(total_score):
     """获取总分解释"""
     if total_score >= 0.8:
-        return {"level": "优秀", "color": "🟢", "advice": "综合表现优秀，检索系统可以投入使用"}
+        return {"level": "优秀", "advice": "综合表现优秀，检索系统可以投入使用"}
     elif total_score >= 0.6:
-        return {"level": "良好", "color": "🟡", "advice": "综合表现良好，建议针对薄弱环节进一步优化"}
+        return {"level": "良好", "advice": "综合表现良好，建议针对薄弱环节进一步优化"}
     elif total_score >= 0.4:
-        return {"level": "一般", "color": "🟠", "advice": "综合表现一般，需要重点改进相关性和全面性"}
+        return {"level": "一般", "advice": "综合表现一般，需要重点改进相关性和全面性"}
     elif total_score >= 0.2:
-        return {"level": "较差", "color": "🔴", "advice": "综合表现较差，建议重新审视检索策略"}
+        return {"level": "较差", "advice": "综合表现较差，建议重新审视检索策略"}
     else:
-        return {"level": "很差", "color": "⚫", "advice": "综合表现很差，需要重新设计检索系统"}
-    
-    print("\n📈 Top-K准确率:")
-    top_k = summary["top_k_performance"]
-    for k, accuracy in top_k.items():
-        interp = get_score_interpretation(accuracy)
-        print(f"  {interp['color']} {k.replace('_', '-').title()}: {accuracy:.3f} ({interp['level']})")
-    
-    # 路径匹配性能
-    if "path_matching_performance" in summary:
-        path_perf = summary["path_matching_performance"]
-        print(f"\n🔍 路径匹配性能:")
-        print(f"  📈 平均匹配分数: {path_perf['avg_path_match_score']:.3f}")
-        print(f"  ✅ 精确匹配总数: {path_perf['total_exact_matches']}")
-        print(f"  🎯 精确匹配率: {path_perf['exact_match_rate']:.3f}")
-    
-    # 分数分布
-    if "score_distribution" in summary:
-        score_dist = summary["score_distribution"]
-        print(f"\n📊 检索分数分析:")
-        print(f"  📈 平均结果分数: {score_dist['avg_result_score']:.3f}")
-        print(f"  🔝 平均最高分: {score_dist['avg_max_score']:.3f}")
-        print(f"  📏 分数一致性: {score_dist['score_consistency']:.3f}")
-    
-    print("\n" + "="*60)
+        return {"level": "很差", "advice": "综合表现很差，需要重新设计检索系统"}
 
 def get_score_interpretation(score):
-    """获取分数解释（从result_formatter导入）"""
+    """获取分数解释"""
     if score >= 0.8:
-        return {"level": "优秀", "color": "🟢", "description": "表现很好"}
+        return {"level": "优秀", "description": "表现很好"}
     elif score >= 0.6:
-        return {"level": "良好", "color": "🟡", "description": "表现不错，有改进空间"}
+        return {"level": "良好", "description": "表现不错，有改进空间"}
     elif score >= 0.4:
-        return {"level": "一般", "color": "🟠", "description": "表现一般，需要优化"}
+        return {"level": "一般", "description": "表现一般，需要优化"}
     elif score >= 0.2:
-        return {"level": "较差", "color": "🔴", "description": "表现较差，急需改进"}
+        return {"level": "较差", "description": "表现较差，急需改进"}
     else:
-        return {"level": "很差", "color": "⚫", "description": "表现很差，需要重新设计"}
+        return {"level": "很差", "description": "表现很差，需要重新设计"}
 
 def show_problematic_queries(evaluator):
     """显示问题查询"""

@@ -248,17 +248,17 @@ def print_formatted_result(result, show_details=True):
         show_details: 是否显示详细信息
     """
     if not result.get("success", False):
-        print(f"❌ 查询失败: {result.get('query', 'Unknown')} - {result.get('error', 'Unknown error')}")
+        print(f"查询失败: {result.get('query', 'Unknown')} - {result.get('error', 'Unknown error')}")
         return
     
-    print(f"\n📊 查询: {result.get('query', 'Unknown')}")
-    print(f"🏷️  类别: {result.get('category', 'Unknown')}")
+    print(f"\n查询: {result.get('query', 'Unknown')}")
+    print(f"类别: {result.get('category', 'Unknown')}")
     
     # 显示新评估框架指标
     if "framework_explanation" in result:
         framework = result["framework_explanation"]
         
-        print("\n🎯 新评估框架指标:")
+        print("\n新评估框架指标:")
         
         # 总分
         total_info = framework["total_score"]
@@ -266,7 +266,7 @@ def print_formatted_result(result, show_details=True):
         print(f"  {total_interp['color']} 综合评分: {total_info['value']:.3f} ({total_interp['level']})")
         if show_details:
             print(f"     └─ {total_info['description']}")
-            print(f"     💡 {total_interp.get('advice', '')}")
+            print(f"     {total_interp.get('advice', '')}")
         
         # 三个维度
         dimensions = ["relevance", "completeness", "usability"]
@@ -284,7 +284,7 @@ def print_formatted_result(result, show_details=True):
     if show_details and "traditional_metrics_explanation" in result:
         traditional = result["traditional_metrics_explanation"]
         
-        print("\n📈 传统指标 (对比参考):")
+        print("\n传统指标 (对比参考):")
         for metric_name, metric_info in traditional.items():
             value = metric_info["value"]
             interp = metric_info["interpretation"]
@@ -293,17 +293,17 @@ def print_formatted_result(result, show_details=True):
     
     if show_details and "path_matching_explanation" in result:
         path_exp = result["path_matching_explanation"]
-        print(f"\n🔍 路径匹配分析:")
-        print(f"  📈 总分: {path_exp['total_score']['value']:.3f}")
+        print(f"\n路径匹配分析:")
+        print(f"  总分: {path_exp['total_score']['value']:.3f}")
         
         match_details = path_exp["match_details"]
-        print(f"  ✅ 精确匹配: {match_details['exact_matches']['count']} 个")
-        print(f"  🎯 部分匹配: {match_details['partial_matches']['count']} 个")
-        print(f"  📄 扩展名匹配: {match_details['extension_matches']['count']} 个")
+        print(f"  精确匹配: {match_details['exact_matches']['count']} 个")
+        print(f"  部分匹配: {match_details['partial_matches']['count']} 个")
+        print(f"  扩展名匹配: {match_details['extension_matches']['count']} 个")
     
     if show_details and "advanced_metrics_explanation" in result:
         adv_metrics = result["advanced_metrics_explanation"]
-        print(f"\n📈 高级指标:")
+        print(f"\n高级指标:")
         for metric_name, metric_info in adv_metrics.items():
             print(f"  • {metric_name.upper()}: {metric_info['value']:.3f} - {metric_info['description']}")
 
