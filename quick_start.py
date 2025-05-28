@@ -167,13 +167,6 @@ def run_mini_evaluation():
             print(f"  平均全面性: {new_framework['avg_completeness']:.3f} (权重30%)")
             print(f"  平均可用性: {new_framework['avg_usability']:.3f} (权重20%)")
         
-        print("\n传统指标对比:")
-        if "traditional_performance" in summary:
-            traditional = summary["traditional_performance"]
-            print(f"  平均精确率: {traditional['avg_precision']:.3f}")
-            print(f"  平均召回率: {traditional['avg_recall']:.3f}")
-            print(f"  平均F1分数: {traditional['avg_f1_score']:.3f}")
-        
         # 保存迷你结果
         mini_result_path = "results/mini_evaluation_result.json"
         evaluator.save_results(results, mini_result_path)

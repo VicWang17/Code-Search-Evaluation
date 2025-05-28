@@ -20,60 +20,35 @@ def format_evaluation_result(result):
     # 添加指标解释
     formatted_result = result.copy()
     
-    # 新评估框架指标注释
-    formatted_result["framework_explanation"] = {
+    # 新评估框架指标 (主要)
+    formatted_result["new_framework_metrics"] = {
         "total_score": {
             "value": result.get("total_score", 0.0),
-            "description": "综合评分 - 相关性×0.5 + 全面性×0.3 + 可用性×0.2",
-            "formula": "相关性×0.5 + 全面性×0.3 + 可用性×0.2",
-            "range": "0.0-1.0 (越高越好)",
+            "description": "新框架综合评分 - 相关性、全面性、可用性的加权平均",
+            "weight_breakdown": "相关性50% + 全面性30% + 可用性20%",
+            "range": "0.0-1.0",
             "interpretation": get_total_score_interpretation(result.get("total_score", 0.0))
         },
         "relevance": {
             "value": result.get("relevance", 0.0),
-            "description": "相关性 (50%) - 前k个结果中相关数/k",
+            "description": "新框架相关性 - 前k个结果中相关结果的比例",
             "formula": "前k个结果中相关数 / k",
-            "range": "0.0-1.0 (越高越好)",
+            "range": "0.0-1.0",
             "interpretation": get_score_interpretation(result.get("relevance", 0.0))
         },
         "completeness": {
             "value": result.get("completeness", 0.0),
-            "description": "全面性 (30%) - 前k个结果中的相关数/总相关数",
-            "formula": "前k个结果中的相关数 / 总相关数",
-            "range": "0.0-1.0 (越高越好)",
+            "description": "新框架全面性 - 前k个结果找到的相关结果占总相关结果的比例",
+            "formula": "前k个结果中相关数 / 总相关数",
+            "range": "0.0-1.0",
             "interpretation": get_score_interpretation(result.get("completeness", 0.0))
         },
         "usability": {
             "value": result.get("usability", 0.0),
-            "description": "可用性 (20%) - 平均倒数排名 (MRR)",
-            "formula": "第一个相关结果排名的倒数",
-            "range": "0.0-1.0 (越高越好)",
-            "interpretation": get_mrr_interpretation(result.get("usability", 0.0))
-        }
-    }
-    
-    # 传统指标注释 (保留用于对比)
-    formatted_result["traditional_metrics_explanation"] = {
-        "precision": {
-            "value": result.get("precision", 0.0),
-            "description": "传统精确率 - 检索到的结果中相关结果的比例",
-            "formula": "相关且检索到的结果数 / 总检索到的结果数",
-            "range": "0.0-1.0 (越高越好)",
-            "interpretation": get_score_interpretation(result.get("precision", 0.0))
-        },
-        "recall": {
-            "value": result.get("recall", 0.0),
-            "description": "传统召回率 - 所有相关结果中被检索到的比例",
-            "formula": "相关且检索到的结果数 / 总相关结果数",
-            "range": "0.0-1.0 (越高越好)",
-            "interpretation": get_score_interpretation(result.get("recall", 0.0))
-        },
-        "f1_score": {
-            "value": result.get("f1_score", 0.0),
-            "description": "传统F1分数 - 精确率和召回率的调和平均数",
-            "formula": "2 × (精确率 × 召回率) / (精确率 + 召回率)",
-            "range": "0.0-1.0 (越高越好)",
-            "interpretation": get_f1_interpretation(result.get("f1_score", 0.0))
+            "description": "新框架可用性 - 第一个相关结果的位置倒数(MRR)",
+            "formula": "1 / 第一个相关结果的排名",
+            "range": "0.0-1.0",
+            "interpretation": get_score_interpretation(result.get("usability", 0.0))
         }
     }
     
@@ -195,21 +170,6 @@ def get_total_score_interpretation(total_score):
     
     return interpretation
 
-def get_f1_interpretation(f1_score):
-    """获取F1分数的特殊解释"""
-    interpretation = get_score_interpretation(f1_score)
-    
-    if f1_score >= 0.7:
-        interpretation["advice"] = "传统F1指标优秀，可以投入使用"
-    elif f1_score >= 0.5:
-        interpretation["advice"] = "传统F1指标可以接受，建议进一步优化"
-    elif f1_score >= 0.3:
-        interpretation["advice"] = "传统F1指标需要改进，检查算法和数据"
-    else:
-        interpretation["advice"] = "传统F1指标很差，需要重新设计检索策略"
-    
-    return interpretation
-
 def get_mrr_interpretation(mrr):
     """获取MRR的解释"""
     if mrr >= 0.8:
@@ -255,8 +215,8 @@ def print_formatted_result(result, show_details=True):
     print(f"类别: {result.get('category', 'Unknown')}")
     
     # 显示新评估框架指标
-    if "framework_explanation" in result:
-        framework = result["framework_explanation"]
+    if "new_framework_metrics" in result:
+        framework = result["new_framework_metrics"]
         
         print("\n新评估框架指标:")
         
@@ -280,17 +240,6 @@ def print_formatted_result(result, show_details=True):
                 if show_details:
                     print(f"     └─ {dim_info['description']}")
     
-    # 显示传统指标 (折叠显示)
-    if show_details and "traditional_metrics_explanation" in result:
-        traditional = result["traditional_metrics_explanation"]
-        
-        print("\n传统指标 (对比参考):")
-        for metric_name, metric_info in traditional.items():
-            value = metric_info["value"]
-            interp = metric_info["interpretation"]
-            print(f"  {interp['color']} {metric_name.replace('_', ' ').title()}: {value:.3f} ({interp['level']})")
-            print(f"     └─ {metric_info['description']}")
-    
     if show_details and "path_matching_explanation" in result:
         path_exp = result["path_matching_explanation"]
         print(f"\n路径匹配分析:")
@@ -311,25 +260,30 @@ def format_summary_with_explanations(summary_metrics):
     """为汇总指标添加解释"""
     formatted_summary = summary_metrics.copy()
     
-    if "overall_performance" in summary_metrics:
-        overall = summary_metrics["overall_performance"]
-        formatted_summary["overall_performance_explanation"] = {
-            "description": "所有测试案例的平均表现",
+    if "new_framework_performance" in summary_metrics:
+        new_framework = summary_metrics["new_framework_performance"]
+        formatted_summary["new_framework_explanation"] = {
+            "description": "新评估框架的平均表现",
             "metrics": {
-                "avg_f1_score": {
-                    "value": overall.get("avg_f1_score", 0.0),
-                    "interpretation": get_f1_interpretation(overall.get("avg_f1_score", 0.0)),
+                "avg_total_score": {
+                    "value": new_framework.get("avg_total_score", 0.0),
+                    "interpretation": get_total_score_interpretation(new_framework.get("avg_total_score", 0.0)),
                     "importance": "最重要的综合指标"
                 },
-                "avg_precision": {
-                    "value": overall.get("avg_precision", 0.0),
-                    "interpretation": get_score_interpretation(overall.get("avg_precision", 0.0)),
-                    "importance": "衡量结果准确性"
+                "avg_relevance": {
+                    "value": new_framework.get("avg_relevance", 0.0),
+                    "interpretation": get_score_interpretation(new_framework.get("avg_relevance", 0.0)),
+                    "importance": "衡量结果相关性"
                 },
-                "avg_recall": {
-                    "value": overall.get("avg_recall", 0.0),
-                    "interpretation": get_score_interpretation(overall.get("avg_recall", 0.0)),
-                    "importance": "衡量结果完整性"
+                "avg_completeness": {
+                    "value": new_framework.get("avg_completeness", 0.0),
+                    "interpretation": get_score_interpretation(new_framework.get("avg_completeness", 0.0)),
+                    "importance": "衡量结果全面性"
+                },
+                "avg_usability": {
+                    "value": new_framework.get("avg_usability", 0.0),
+                    "interpretation": get_score_interpretation(new_framework.get("avg_usability", 0.0)),
+                    "importance": "衡量结果可用性"
                 }
             }
         }

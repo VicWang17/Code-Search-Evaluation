@@ -10,6 +10,7 @@ import logging
 import json
 from datetime import datetime
 from pathlib import Path
+import numpy as np
 
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(__file__))
@@ -209,40 +210,38 @@ def generate_markdown_report(results, output_path):
         f.write(f"- **成功率**: {summary['evaluation_statistics']['success_rate']:.1%}\n\n")
         
         # 整体性能
-        f.write("## 整体性能指标\n\n")
-        overall = summary["overall_performance"]
-        f.write(f"- **平均精确率**: {overall['avg_precision']:.3f}\n")
-        f.write(f"- **平均召回率**: {overall['avg_recall']:.3f}\n")
-        f.write(f"- **平均F1分数**: {overall['avg_f1_score']:.3f}\n")
-        f.write(f"- **平均MRR**: {overall['avg_mrr']:.3f}\n")
-        f.write(f"- **平均NDCG**: {overall['avg_ndcg']:.3f}\n\n")
+        successful_results = [r for r in results["detailed_results"] if r.get("success", False)]
+        if successful_results:
+            f.write("## 整体性能指标\n\n")
+            total_scores = [r.get("total_score", 0.0) for r in successful_results]
+            relevance_scores = [r.get("relevance", 0.0) for r in successful_results]
+            completeness_scores = [r.get("completeness", 0.0) for r in successful_results]
+            usability_scores = [r.get("usability", 0.0) for r in successful_results]
+            
+            f.write(f"- **平均总分**: {np.mean(total_scores):.3f}\n")
+            f.write(f"- **平均相关性**: {np.mean(relevance_scores):.3f}\n")
+            f.write(f"- **平均全面性**: {np.mean(completeness_scores):.3f}\n")
+            f.write(f"- **平均可用性**: {np.mean(usability_scores):.3f}\n\n")
         
-        # Top-K性能
-        f.write("## Top-K准确率\n\n")
-        top_k = summary["top_k_performance"]
-        for k, accuracy in top_k.items():
-            f.write(f"- **{k.replace('_', '-').title()}**: {accuracy:.3f}\n")
-        f.write("\n")
-        
-        # 路径匹配性能
-        f.write("## 路径匹配分析\n\n")
-        path_matching = summary["path_matching_performance"]
-        f.write(f"- **平均路径匹配分数**: {path_matching['avg_path_match_score']:.3f}\n")
-        f.write(f"- **精确匹配总数**: {path_matching['total_exact_matches']}\n")
-        f.write(f"- **部分匹配总数**: {path_matching['total_partial_matches']}\n")
-        f.write(f"- **精确匹配率**: {path_matching['exact_match_rate']:.3f}\n\n")
+        # 新评估框架指标
+        if "new_framework_performance" in summary:
+            f.write("## 新评估框架表现\n\n")
+            new_framework = summary["new_framework_performance"]
+            f.write(f"- **平均综合评分**: {new_framework['avg_total_score']:.3f}\n")
+            f.write(f"- **平均相关性**: {new_framework['avg_relevance']:.3f} (权重50%)\n")
+            f.write(f"- **平均全面性**: {new_framework['avg_completeness']:.3f} (权重30%)\n")
+            f.write(f"- **平均可用性**: {new_framework['avg_usability']:.3f} (权重20%)\n\n")
         
         # 分类别性能
         if "category_metrics" in results:
             f.write("## 分类别性能\n\n")
-            for category, metrics in results["category_metrics"].items():
-                f.write(f"### {metrics['name']}\n\n")
-                f.write(f"- **测试案例数**: {metrics['count']}\n")
-                f.write(f"- **权重**: {metrics['weight']}\n")
-                f.write(f"- **平均精确率**: {metrics['avg_precision']:.3f}\n")
-                f.write(f"- **平均召回率**: {metrics['avg_recall']:.3f}\n")
-                f.write(f"- **平均F1分数**: {metrics['avg_f1']:.3f}\n")
-                f.write(f"- **加权分数**: {metrics['weighted_score']:.3f}\n\n")
+            for category, cat_metrics in results["category_metrics"].items():
+                f.write(f"### {cat_metrics.get('name', category)}\n\n")
+                f.write(f"- **测试案例数**: {cat_metrics['count']}\n")
+                f.write(f"- **平均总分**: {cat_metrics['avg_total_score']:.3f}\n")
+                f.write(f"- **平均相关性**: {cat_metrics['avg_relevance']:.3f}\n")
+                f.write(f"- **平均全面性**: {cat_metrics['avg_completeness']:.3f}\n")
+                f.write(f"- **平均可用性**: {cat_metrics['avg_usability']:.3f}\n\n")
 
 def generate_summary_report(results, output_path):
     """生成简要文本报告"""
@@ -257,12 +256,14 @@ def generate_summary_report(results, output_path):
         f.write(f"测试案例: {meta['total_test_cases']} (成功: {meta['successful_evaluations']})\n")
         f.write(f"成功率: {summary['evaluation_statistics']['success_rate']:.1%}\n\n")
         
-        overall = summary["overall_performance"]
-        f.write("整体性能:\n")
-        f.write(f"  精确率: {overall['avg_precision']:.3f}\n")
-        f.write(f"  召回率: {overall['avg_recall']:.3f}\n")
-        f.write(f"  F1分数: {overall['avg_f1_score']:.3f}\n")
-        f.write(f"  MRR: {overall['avg_mrr']:.3f}\n")
+        # 新评估框架表现
+        if "new_framework_performance" in summary:
+            new_framework = summary["new_framework_performance"]
+            f.write("新评估框架表现:\n")
+            f.write(f"  综合评分: {new_framework['avg_total_score']:.3f}\n")
+            f.write(f"  相关性: {new_framework['avg_relevance']:.3f}\n")
+            f.write(f"  全面性: {new_framework['avg_completeness']:.3f}\n")
+            f.write(f"  可用性: {new_framework['avg_usability']:.3f}\n")
 
 def show_summary(results, debug=False):
     """显示评估结果摘要"""
@@ -304,13 +305,7 @@ def show_summary(results, debug=False):
                 interp = get_score_interpretation(value)
                 print(f"  {metric_name}: {value:.3f} ({interp['level']}) - 权重: {weight*100:.0f}%")
         
-        # 传统指标对比
-        if "traditional_performance" in summary:
-            traditional = summary["traditional_performance"]
-            print(f"\n传统指标对比:")
-            print(f"  平均精确率: {traditional['avg_precision']:.3f}")
-            print(f"  平均召回率: {traditional['avg_recall']:.3f}")
-            print(f"  平均F1分数: {traditional['avg_f1_score']:.3f}")
+        print("\n" + "=" * 50)
 
 def get_total_score_interpretation(total_score):
     """获取总分解释"""

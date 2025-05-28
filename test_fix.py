@@ -33,55 +33,27 @@ def explain_path_matching_result(result):
     
     print(f"  期望结果总数: {result['total_expected']} 个")
 
-def explain_new_framework_metrics(framework_metrics):
-    """详细解释新评估框架指标"""
-    print("\n新评估框架分析:")
+def explain_new_framework_metrics(metrics):
+    """解释新评估框架指标"""
+    print("\n新评估框架指标:")
+    print(f"  总分: {metrics['total_score']:.3f}")
+    print(f"  相关性 (50%权重): {metrics['relevance']:.3f}")
+    print(f"  全面性 (30%权重): {metrics['completeness']:.3f}")
+    print(f"  可用性 (20%权重): {metrics['usability']:.3f}")
     
-    details = framework_metrics.get("details", {})
+    # 详细解释
+    details = metrics.get("details", {})
+    print("\n详细分析:")
+    print(f"  前{details.get('k', 10)}个结果中相关数: {details.get('relevant_in_top_k', 0)}")
+    print(f"  总相关结果数: {details.get('total_relevant', 0)}")
+    print(f"  MRR (可用性): {details.get('mrr', 0.0):.3f}")
+    
+    # 权重分解
     weights = details.get("weights", {})
-    
-    print(f"  综合评分: {framework_metrics['total_score']:.3f}")
-    print("     ├─ 计算公式: 相关性×0.5 + 全面性×0.3 + 可用性×0.2")
-    print(f"     └─ 评估范围: 前{details.get('k', 10)}个结果")
-    
-    print(f"\n  相关性 (权重{weights.get('relevance', 0.5)*100:.0f}%): {framework_metrics['relevance']:.3f}")
-    print("     ├─ 含义: 前k个结果中相关结果的比例")
-    print(f"     ├─ 计算: {details.get('relevant_in_top_k', 0)} / {details.get('k', 10)}")
-    if framework_metrics['relevance'] >= 0.7:
-        print("     └─ 评价: 优秀 - 返回的结果大部分都相关")
-    elif framework_metrics['relevance'] >= 0.5:
-        print("     └─ 评价: 良好 - 返回结果有一定相关性")
-    else:
-        print("     └─ 评价: 较差 - 返回了太多不相关结果")
-    
-    print(f"\n  全面性 (权重{weights.get('completeness', 0.3)*100:.0f}%): {framework_metrics['completeness']:.3f}")
-    print("     ├─ 含义: 找到了多少比例的相关结果")
-    print(f"     ├─ 计算: {details.get('relevant_in_top_k', 0)} / {details.get('total_relevant', 0)}")
-    if framework_metrics['completeness'] >= 0.7:
-        print("     └─ 评价: 优秀 - 找到了大部分相关结果")
-    elif framework_metrics['completeness'] >= 0.5:
-        print("     └─ 评价: 良好 - 找到了部分相关结果")
-    else:
-        print("     └─ 评价: 较差 - 遗漏了很多相关结果")
-    
-    print(f"\n  可用性 (权重{weights.get('usability', 0.2)*100:.0f}%): {framework_metrics['usability']:.3f}")
-    print("     ├─ 含义: 第一个相关结果的排名质量 (MRR)")
-    print("     ├─ 计算: 第一个相关结果排名的倒数")
-    if framework_metrics['usability'] >= 0.7:
-        print("     └─ 评价: 优秀 - 相关结果排名很靠前")
-    elif framework_metrics['usability'] >= 0.5:
-        print("     └─ 评价: 良好 - 相关结果排名较靠前")
-    else:
-        print("     └─ 评价: 较差 - 相关结果排名太靠后")
-
-def explain_traditional_metrics(precision, recall, f1):
-    """解释传统指标 (对比参考)"""
-    print("\n传统指标对比:")
-    
-    print(f"  传统精确率: {precision:.3f}")
-    print(f"  传统召回率: {recall:.3f}")
-    print(f"  传统F1分数: {f1:.3f}")
-    print("     └─ 注: 传统指标基于所有检索结果，新框架基于前k个结果")
+    print(f"\n权重分解:")
+    print(f"  相关性权重: {weights.get('relevance', 0.5)*100:.0f}%")
+    print(f"  全面性权重: {weights.get('completeness', 0.3)*100:.0f}%")
+    print(f"  可用性权重: {weights.get('usability', 0.2)*100:.0f}%")
 
 def test_path_matching():
     """测试路径匹配功能"""
@@ -90,7 +62,15 @@ def test_path_matching():
     print("正在测试路径匹配功能...")
     
     # 创建评估指标实例
-    metrics = EvaluationMetrics()
+    default_config = {
+        "framework_weights": {
+            "relevance": 0.5,
+            "completeness": 0.3,
+            "usability": 0.2
+        },
+        "default_k": 10
+    }
+    metrics = EvaluationMetrics(default_config)
     
     # 模拟API返回结果
     actual_results = [
@@ -136,10 +116,6 @@ def test_path_matching():
         # 测试新评估框架指标
         framework_metrics = metrics.calculate_new_framework_metrics(actual_results, expected_results, k=10)
         explain_new_framework_metrics(framework_metrics)
-        
-        # 测试传统指标 (对比)
-        precision, recall, f1 = metrics.calculate_precision_recall_f1(actual_results, expected_results)
-        explain_traditional_metrics(precision, recall, f1)
         
         # 额外的建议
         print_separator("改进建议")

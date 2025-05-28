@@ -7,50 +7,26 @@ import math
 import numpy as np
 from typing import Dict, List, Any, Tuple, Optional
 from collections import defaultdict
+import logging
 
 class EvaluationMetrics:
     """代码检索评估指标计算器"""
     
-    def __init__(self, config=None):
-        """初始化评估指标计算器"""
-        self.config = config or {}
+    def __init__(self, config: Dict[str, Any]):
+        """
+        初始化评估指标
+        
+        Args:
+            config: 评估配置
+        """
+        self.config = config
+        self.logger = logging.getLogger(__name__)
         self.framework_weights = self.config.get("framework_weights", {
             "relevance": 0.5,
             "completeness": 0.3, 
             "usability": 0.2
         })
         self.default_k = self.config.get("default_k", 10)
-    
-    def calculate_precision_recall_f1(self, actual_results: List[Dict], 
-                                    expected_results: List[Dict]) -> Tuple[float, float, float]:
-        """
-        计算精确率、召回率和F1分数
-        
-        Args:
-            actual_results: 实际检索结果
-            expected_results: 期望结果
-            
-        Returns:
-            Tuple[float, float, float]: (precision, recall, f1)
-        """
-        if not actual_results or not expected_results:
-            return 0.0, 0.0, 0.0
-        
-        # 提取路径进行匹配
-        actual_paths = set(self._normalize_path(r.get("path", "")) for r in actual_results)
-        expected_paths = set(self._normalize_path(r.get("path", "")) for r in expected_results)
-        
-        # 计算交集
-        relevant_retrieved = len(actual_paths.intersection(expected_paths))
-        total_retrieved = len(actual_paths)
-        total_relevant = len(expected_paths)
-        
-        # 计算指标
-        precision = relevant_retrieved / total_retrieved if total_retrieved > 0 else 0.0
-        recall = relevant_retrieved / total_relevant if total_relevant > 0 else 0.0
-        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
-        
-        return precision, recall, f1
     
     def calculate_new_framework_metrics(self, actual_results: List[Dict], 
                                       expected_results: List[Dict],
@@ -384,7 +360,16 @@ class CategoryEvaluator:
     """分类别评估器"""
     
     def __init__(self):
-        self.metrics = EvaluationMetrics()
+        # 使用默认配置初始化EvaluationMetrics
+        default_config = {
+            "framework_weights": {
+                "relevance": 0.5,
+                "completeness": 0.3,
+                "usability": 0.2
+            },
+            "default_k": 10
+        }
+        self.metrics = EvaluationMetrics(default_config)
     
     def evaluate_by_category(self, results: List[Dict], 
                            category_config: Dict[str, Any]) -> Dict[str, Dict]:
@@ -417,11 +402,6 @@ class CategoryEvaluator:
                 completeness_scores = [r.get("completeness", 0.0) for r in cat_results]
                 usability_scores = [r.get("usability", 0.0) for r in cat_results]
                 
-                # 传统指标 (保留)
-                precisions = [r.get("precision", 0.0) for r in cat_results]
-                recalls = [r.get("recall", 0.0) for r in cat_results]
-                f1_scores = [r.get("f1_score", 0.0) for r in cat_results]
-                
                 category_metrics[category] = {
                     "name": category_config[category].get("name", category),
                     "count": len(cat_results),
@@ -431,18 +411,22 @@ class CategoryEvaluator:
                     "avg_relevance": np.mean(relevance_scores) if relevance_scores else 0.0,
                     "avg_completeness": np.mean(completeness_scores) if completeness_scores else 0.0,
                     "avg_usability": np.mean(usability_scores) if usability_scores else 0.0,
-                    "weighted_score": np.mean(total_scores) * weight if total_scores else 0.0,
-                    # 传统指标 (保留)
-                    "avg_precision": np.mean(precisions) if precisions else 0.0,
-                    "avg_recall": np.mean(recalls) if recalls else 0.0,
-                    "avg_f1": np.mean(f1_scores) if f1_scores else 0.0
+                    "weighted_score": np.mean(total_scores) * weight if total_scores else 0.0
                 }
         
         return category_metrics
 
 if __name__ == "__main__":
     # 测试代码
-    metrics = EvaluationMetrics()
+    default_config = {
+        "framework_weights": {
+            "relevance": 0.5,
+            "completeness": 0.3,
+            "usability": 0.2
+        },
+        "default_k": 10
+    }
+    metrics = EvaluationMetrics(default_config)
     
     # 模拟数据
     actual = [
@@ -456,9 +440,9 @@ if __name__ == "__main__":
         {"path": "pages\\settlement\\style.scss", "relevance_score": 0.5}
     ]
     
-    # 测试指标计算
-    precision, recall, f1 = metrics.calculate_precision_recall_f1(actual, expected)
-    print(f"Precision: {precision:.3f}, Recall: {recall:.3f}, F1: {f1:.3f}")
+    # 测试新框架指标
+    framework_metrics = metrics.calculate_new_framework_metrics(actual, expected)
+    print(f"新框架指标: {framework_metrics}")
     
     # 测试Top-K准确率
     top_k = metrics.calculate_top_k_accuracy(actual, expected, [1, 3, 5])

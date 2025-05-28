@@ -96,25 +96,6 @@ class CodeSearchEvaluator:
             self.config["evaluation"].get("default_k", 10)
         )
         
-        # 计算传统指标 (保留用于对比分析)
-        precision, recall, f1 = self.metrics.calculate_precision_recall_f1(
-            actual_results, expected_results
-        )
-        
-        path_matching = self.metrics.calculate_path_matching_score(
-            actual_results, expected_results,
-            self.config["evaluation"]["path_matching"]
-        )
-        
-        top_k_accuracy = self.metrics.calculate_top_k_accuracy(
-            actual_results, expected_results,
-            self.config["evaluation"]["top_k_values"]
-        )
-        
-        score_analysis = self.metrics.calculate_score_analysis(actual_results)
-        
-        diversity = self.metrics.calculate_diversity_score(actual_results)
-        
         # 构建评估结果
         evaluation_result = {
             "idx": test_case["idx"],
@@ -123,23 +104,12 @@ class CodeSearchEvaluator:
             "weight": weight,
             "description": test_case.get("description", ""),
             
-            # 新评估框架指标 (主要指标)
+            # 新评估框架指标
             "framework_metrics": framework_metrics,
             "relevance": framework_metrics["relevance"],
             "completeness": framework_metrics["completeness"],
             "usability": framework_metrics["usability"],
             "total_score": framework_metrics["total_score"],
-            
-            # 传统指标 (保留用于对比)
-            "precision": precision,
-            "recall": recall,
-            "f1_score": f1,
-            
-            # 详细分析
-            "path_matching": path_matching,
-            "top_k_accuracy": top_k_accuracy,
-            "score_analysis": score_analysis,
-            "diversity": diversity,
             
             # 原始数据
             "expected_results": expected_results,
@@ -239,27 +209,6 @@ class CodeSearchEvaluator:
         completeness_scores = [r["completeness"] for r in successful_results]
         usability_scores = [r["usability"] for r in successful_results]
         
-        # 计算传统指标 (保留用于对比)
-        precisions = [r["precision"] for r in successful_results]
-        recalls = [r["recall"] for r in successful_results]
-        f1_scores = [r["f1_score"] for r in successful_results]
-        
-        # Top-K准确率汇总
-        top_k_summary = {}
-        k_values = self.config["evaluation"]["top_k_values"]
-        for k in k_values:
-            k_accuracies = [r["top_k_accuracy"].get(k, 0.0) for r in successful_results]
-            top_k_summary[f"top_{k}_accuracy"] = sum(k_accuracies) / len(k_accuracies)
-        
-        # 路径匹配汇总
-        path_match_scores = [r["path_matching"]["total_score"] for r in successful_results]
-        exact_matches = sum(r["path_matching"]["exact_matches"] for r in successful_results)
-        partial_matches = sum(r["path_matching"]["partial_matches"] for r in successful_results)
-        
-        # 分数分析汇总
-        avg_scores = [r["score_analysis"]["avg_score"] for r in successful_results]
-        max_scores = [r["score_analysis"]["max_score"] for r in successful_results]
-        
         return {
             "new_framework_performance": {
                 "avg_total_score": sum(total_scores) / len(total_scores),
@@ -267,23 +216,6 @@ class CodeSearchEvaluator:
                 "avg_completeness": sum(completeness_scores) / len(completeness_scores),
                 "avg_usability": sum(usability_scores) / len(usability_scores),
                 "framework_weights": successful_results[0]["framework_metrics"]["details"]["weights"] if successful_results else {}
-            },
-            "traditional_performance": {
-                "avg_precision": sum(precisions) / len(precisions),
-                "avg_recall": sum(recalls) / len(recalls),
-                "avg_f1_score": sum(f1_scores) / len(f1_scores)
-            },
-            "top_k_performance": top_k_summary,
-            "path_matching_performance": {
-                "avg_path_match_score": sum(path_match_scores) / len(path_match_scores),
-                "total_exact_matches": exact_matches,
-                "total_partial_matches": partial_matches,
-                "exact_match_rate": exact_matches / len(successful_results)
-            },
-            "score_distribution": {
-                "avg_result_score": sum(avg_scores) / len(avg_scores),
-                "avg_max_score": sum(max_scores) / len(max_scores),
-                "score_consistency": 1.0 - (max(avg_scores) - min(avg_scores)) if avg_scores else 0.0
             },
             "evaluation_statistics": {
                 "total_queries": len(self.evaluation_results),
@@ -338,14 +270,9 @@ class CodeSearchEvaluator:
         if result.get("framework_metrics", {}).get("details", {}).get("relevant_in_top_k", 0) == 0:
             issues.append("前k个结果中没有相关结果")
         
-        if result.get("path_matching", {}).get("exact_matches", 0) == 0:
-            issues.append("路径匹配失败 - 没有找到期望的文件")
-        
-        if result.get("top_k_accuracy", {}).get(1, 0.0) == 0.0:
-            issues.append("Top-1准确率为0 - 第一个结果不相关")
-        
-        if result.get("score_analysis", {}).get("max_score", 0.0) < 0.5:
-            issues.append("检索分数过低 - 可能存在匹配问题")
+        # 检查总分是否过低
+        if result.get("total_score", 0.0) < 0.2:
+            issues.append("综合评分过低 - 检索系统性能需要全面改进")
         
         return issues
     
