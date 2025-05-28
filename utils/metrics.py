@@ -63,23 +63,26 @@ class EvaluationMetrics:
         expected_paths = set(self._normalize_path(r.get("path", "")) for r in expected_results)
         actual_paths = [self._normalize_path(r.get("path", "")) for r in actual_results]
         
-        # 限制到前k个结果
-        top_k_paths = actual_paths[:min(k, len(actual_paths))]
+        # 限制到前N个结果（N为期望结果数量）
+        N = len(expected_results)
+        top_k_paths = actual_paths[:min(k,len(actual_paths))]
+        top_n_paths = actual_paths[:N]
         
-        # 计算前k个结果中的相关数量
+        # 计算前N个结果中的相关数量
         relevant_in_top_k = len([path for path in top_k_paths if path in expected_paths])
+        relevant_in_top_n = len([path for path in top_n_paths if path in expected_paths])
         total_relevant = len(expected_paths)
         
-        # 1. 相关性 (精确率): 前k个结果中相关数/k
-        relevance = relevant_in_top_k / k if k > 0 else 0.0
-        
+        # 1. 相关性 (精确率): 前N个结果中相关数/N
+        relevance = relevant_in_top_n / N if N > 0 else 0.0
+
         # 2. 全面性 (召回率): 前k个结果中的相关数/总相关数
         completeness = relevant_in_top_k / total_relevant if total_relevant > 0 else 0.0
         
         # 3. 可用性 (MRR): 第一个相关结果排名的倒数
         usability = self.calculate_mrr(actual_results, expected_results)
         
-        # 4. 总分: 相关性*0.5 + 全面性*0.3 + 可用性*0.2
+        # 4. 总分: 相关性*0.3 + 全面性*0.3 + 可用性*0.4
         total_score = (
             relevance * self.framework_weights["relevance"] +
             completeness * self.framework_weights["completeness"] +

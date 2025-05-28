@@ -36,9 +36,9 @@ API_CONFIG = {
 EVALUATION_CONFIG = {
     # 新评估框架权重
     "framework_weights": {
-        "relevance": 0.5,    # 相关性权重 (精确率)
+        "relevance": 0.3,    # 相关性权重 (精确率)
         "completeness": 0.3, # 全面性权重 (召回率)
-        "usability": 0.2     # 可用性权重 (MRR)
+        "usability": 0.4     # 可用性权重 (MRR)
     },
     
     # 相关性判断阈值 (只要相关就是1，不相关就是0)

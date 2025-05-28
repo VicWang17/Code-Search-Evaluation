@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 from datetime import datetime
+import json
 
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(__file__))
@@ -110,45 +111,18 @@ def run_mini_evaluation():
         # 创建评估器
         evaluator = CodeSearchEvaluator(config)
         
-        # 创建迷你测试数据集
+        # 读取完整测试数据集
+        with open('test_dataset.json', 'r', encoding='utf-8') as f:
+            full_dataset = json.load(f)
+        
+        # 创建迷你测试数据集（只取前3个测试用例）
         mini_dataset = {
             "meta": {
-                "version": "1.0.0",
-                "description": "测试数据集",
+                "version": full_dataset["meta"]["version"],
+                "description": "迷你测试数据集（前3个测试用例）",
                 "total_cases": 3
             },
-            "test_cases": [
-                {
-                    "idx": "mini-test-001",
-                    "query": "积分商品列表样式",
-                    "category": "style",
-                    "description": "测试样式相关查询",
-                    "expected_results": [
-                        {"path": "pages\\points\\exchange.vue", "relevance_score": 1.0}
-                    ],
-                    "weight": 1.0
-                },
-                {
-                    "idx": "mini-test-002", 
-                    "query": "用户登录接口",
-                    "category": "api",
-                    "description": "测试API相关查询",
-                    "expected_results": [
-                        {"path": "api\\login\\login.js", "relevance_score": 1.0}
-                    ],
-                    "weight": 1.2
-                },
-                {
-                    "idx": "mini-test-003",
-                    "query": "商品卡片布局",
-                    "category": "layout", 
-                    "description": "测试布局相关查询",
-                    "expected_results": [
-                        {"path": "pages\\goods\\list.vue", "relevance_score": 1.0}
-                    ],
-                    "weight": 1.0
-                }
-            ]
+            "test_cases": full_dataset["test_cases"][:3]
         }
         
         # 执行评估
@@ -163,14 +137,20 @@ def run_mini_evaluation():
         if "new_framework_performance" in summary:
             new_framework = summary["new_framework_performance"]
             print(f"  平均综合评分: {new_framework['avg_total_score']:.3f}")
-            print(f"  平均相关性: {new_framework['avg_relevance']:.3f} (权重50%)")
+            print(f"  平均相关性: {new_framework['avg_relevance']:.3f} (权重30%)")
             print(f"  平均全面性: {new_framework['avg_completeness']:.3f} (权重30%)")
-            print(f"  平均可用性: {new_framework['avg_usability']:.3f} (权重20%)")
+            print(f"  平均可用性: {new_framework['avg_usability']:.3f} (权重40%)")
         
-        # 保存迷你结果
-        mini_result_path = "results/mini_evaluation_result.json"
-        evaluator.save_results(results, mini_result_path)
-        print(f"结果已保存到: {mini_result_path}")
+        print("\n分类别评估结果:")          
+        if "category_performance" in summary:
+            for category, metrics in summary["category_performance"].items():
+                print(f"\n  {metrics['name']}:")
+                print(f"    测试用例数: {metrics['count']}")
+                print(f"    权重: {metrics['weight']}")
+                print(f"    加权得分: {metrics['weighted_score']:.3f}")
+                print(f"    平均相关性: {metrics['avg_relevance']:.3f}")
+                print(f"    平均全面性: {metrics['avg_completeness']:.3f}")
+                print(f"    平均可用性: {metrics['avg_usability']:.3f}")
         
         return True
         

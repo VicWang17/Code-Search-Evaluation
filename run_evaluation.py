@@ -228,9 +228,9 @@ def generate_markdown_report(results, output_path):
             f.write("## 新评估框架表现\n\n")
             new_framework = summary["new_framework_performance"]
             f.write(f"- **平均综合评分**: {new_framework['avg_total_score']:.3f}\n")
-            f.write(f"- **平均相关性**: {new_framework['avg_relevance']:.3f} (权重50%)\n")
+            f.write(f"- **平均相关性**: {new_framework['avg_relevance']:.3f} (权重30%)\n")
             f.write(f"- **平均全面性**: {new_framework['avg_completeness']:.3f} (权重30%)\n")
-            f.write(f"- **平均可用性**: {new_framework['avg_usability']:.3f} (权重20%)\n\n")
+            f.write(f"- **平均可用性**: {new_framework['avg_usability']:.3f} (权重40%)\n\n")
         
         # 分类别性能
         if "category_metrics" in results:
@@ -267,45 +267,44 @@ def generate_summary_report(results, output_path):
 
 def show_summary(results, debug=False):
     """显示评估结果摘要"""
-    if not debug:
-        print("\n" + "="*60)
-        print("代码检索评估结果摘要")
-        print("="*60)
+    print("\n" + "="*60)
+    print("代码检索评估结果摘要")
+    print("="*60)
+    
+    meta = results["meta"]
+    summary = results["summary_metrics"]
+    
+    print(f"评估时间: {meta['evaluation_time']}")
+    print(f"测试案例: {meta['total_test_cases']} (成功: {meta['successful_evaluations']})")
+    print(f"成功率: {summary['evaluation_statistics']['success_rate']:.1%}")
+    
+    # 使用格式化工具添加详细解释
+    formatted_summary = format_summary_with_explanations(summary)
+    
+    print("\n新评估框架整体表现:")
+    if "new_framework_performance" in summary:
+        new_framework = summary["new_framework_performance"]
+        weights = new_framework.get("framework_weights", {})
         
-        meta = results["meta"]
-        summary = results["summary_metrics"]
+        # 总分
+        total_score = new_framework["avg_total_score"]
+        total_interp = get_total_score_interpretation(total_score)
+        print(f"  平均综合评分: {total_score:.3f} ({total_interp['level']})")
+        print(f"     {total_interp.get('advice', '')}")
         
-        print(f"评估时间: {meta['evaluation_time']}")
-        print(f"测试案例: {meta['total_test_cases']} (成功: {meta['successful_evaluations']})")
-        print(f"成功率: {summary['evaluation_statistics']['success_rate']:.1%}")
+        # 三个维度
+        dimensions = [
+            ("avg_relevance", "平均相关性", weights.get("relevance", 0.5)),
+            ("avg_completeness", "平均全面性", weights.get("completeness", 0.3)),
+            ("avg_usability", "平均可用性", weights.get("usability", 0.2))
+        ]
         
-        # 使用格式化工具添加详细解释
-        formatted_summary = format_summary_with_explanations(summary)
-        
-        print("\n新评估框架整体表现:")
-        if "new_framework_performance" in summary:
-            new_framework = summary["new_framework_performance"]
-            weights = new_framework.get("framework_weights", {})
-            
-            # 总分
-            total_score = new_framework["avg_total_score"]
-            total_interp = get_total_score_interpretation(total_score)
-            print(f"  平均综合评分: {total_score:.3f} ({total_interp['level']})")
-            print(f"     {total_interp.get('advice', '')}")
-            
-            # 三个维度
-            dimensions = [
-                ("avg_relevance", "平均相关性", weights.get("relevance", 0.5)),
-                ("avg_completeness", "平均全面性", weights.get("completeness", 0.3)),
-                ("avg_usability", "平均可用性", weights.get("usability", 0.2))
-            ]
-            
-            for metric_key, metric_name, weight in dimensions:
-                value = new_framework.get(metric_key, 0.0)
-                interp = get_score_interpretation(value)
-                print(f"  {metric_name}: {value:.3f} ({interp['level']}) - 权重: {weight*100:.0f}%")
-        
-        print("\n" + "=" * 50)
+        for metric_key, metric_name, weight in dimensions:
+            value = new_framework.get(metric_key, 0.0)
+            interp = get_score_interpretation(value)
+            print(f"  {metric_name}: {value:.3f} ({interp['level']}) - 权重: {weight*100:.0f}%")
+    
+    print("\n" + "=" * 50)
 
 def get_total_score_interpretation(total_score):
     """获取总分解释"""
@@ -338,10 +337,10 @@ def show_problematic_queries(evaluator):
     problematic = evaluator.get_problematic_queries(threshold=0.4)
     
     if not problematic:
-        print("\n✅ 没有发现问题查询 (总分 < 0.4)")
+        print("\n 没有发现问题查询 (总分 < 0.4)")
         return
     
-    print(f"\n⚠️  发现 {len(problematic)} 个问题查询 (总分 < 0.4):")
+    print(f"\n  发现 {len(problematic)} 个问题查询 (总分 < 0.4):")
     print("-" * 60)
     
     for i, query in enumerate(problematic[:5]):  # 只显示前5个
