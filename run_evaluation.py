@@ -11,6 +11,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 import numpy as np
+import plotly.graph_objects as go
 
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(__file__))
@@ -65,6 +66,121 @@ def create_directories():
     
     for directory in directories:
         Path(directory).mkdir(parents=True, exist_ok=True)
+
+def save_history_score(results, timestamp):
+    """保存历史分数"""
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # 创建历史分数文件
+        history_scores_path = os.path.join(PATH_CONFIG["history_dir"], "scores_history.json")
+        
+        # 读取现有历史记录
+        if os.path.exists(history_scores_path):
+            with open(history_scores_path, 'r', encoding='utf-8') as f:
+                history_scores = json.load(f)
+        else:
+            history_scores = []
+        
+        # 提取当前评估的分数
+        summary = results["summary_metrics"]
+        if "new_framework_performance" in summary:
+            new_framework = summary["new_framework_performance"]
+            current_score = {
+                "timestamp": timestamp,
+                "total_score": new_framework["avg_total_score"],
+                "relevance": new_framework["avg_relevance"],
+                "completeness": new_framework["avg_completeness"],
+                "usability": new_framework["avg_usability"]
+            }
+            
+            # 添加到历史记录
+            history_scores.append(current_score)
+            
+            # 保存更新后的历史记录
+            with open(history_scores_path, 'w', encoding='utf-8') as f:
+                json.dump(history_scores, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"历史分数已保存: {history_scores_path}")
+            return True
+            
+    except Exception as e:
+        logger.error(f"保存历史分数失败: {e}")
+        if args.debug:
+            logger.exception("详细错误信息:")
+        return False
+
+def generate_history_chart():
+    """生成历史分数折线图"""
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # 读取历史分数
+        history_scores_path = os.path.join(PATH_CONFIG["history_dir"], "scores_history.json")
+        if not os.path.exists(history_scores_path):
+            logger.error("历史分数文件不存在")
+            return False
+            
+        with open(history_scores_path, 'r', encoding='utf-8') as f:
+            history_scores = json.load(f)
+        
+        if not history_scores:
+            logger.error("没有历史分数数据")
+            return False
+        
+        # 创建图表
+        fig = go.Figure()
+        
+        # 添加总分折线
+        fig.add_trace(go.Scatter(
+            x=[score["timestamp"] for score in history_scores],
+            y=[score["total_score"] for score in history_scores],
+            mode='lines+markers',
+            name='总分',
+            line=dict(color='#1f77b4', width=2)
+        ))
+        
+        # 添加各维度折线
+        dimensions = [
+            ("relevance", "相关性", "#ff7f0e"),
+            ("completeness", "全面性", "#2ca02c"),
+            ("usability", "可用性", "#d62728")
+        ]
+        
+        for metric, name, color in dimensions:
+            fig.add_trace(go.Scatter(
+                x=[score["timestamp"] for score in history_scores],
+                y=[score[metric] for score in history_scores],
+                mode='lines+markers',
+                name=name,
+                line=dict(color=color, width=2)
+            ))
+        
+        # 设置图表布局
+        fig.update_layout(
+            title="评估分数历史趋势",
+            xaxis_title="评估时间",
+            yaxis_title="分数",
+            yaxis=dict(range=[0, 1]),
+            showlegend=True,
+            hovermode='x unified'
+        )
+        
+        # 保存图表
+        charts_dir = os.path.join(PATH_CONFIG["reports_dir"], "charts")
+        Path(charts_dir).mkdir(parents=True, exist_ok=True)
+        
+        chart_path = os.path.join(charts_dir, "history_scores.html")
+        fig.write_html(chart_path)
+        logger.info(f"历史分数折线图已生成: {chart_path}")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"生成历史分数折线图失败: {e}")
+        if args.debug:
+            logger.exception("详细错误信息:")
+        return False
 
 def run_evaluation(args):
     """运行评估"""
@@ -147,6 +263,10 @@ def run_evaluation(args):
             evaluator.save_results(results, history_path)
             logger.info(f"历史结果已保存: {history_path}")
         
+        # 保存历史分数
+        if args.save_history:
+            save_history_score(results, timestamp)
+        
         # 生成报告
         if args.generate_report:
             generate_reports(results, timestamp)
@@ -157,6 +277,10 @@ def run_evaluation(args):
         # 识别问题查询
         if args.show_problems:
             show_problematic_queries(evaluator)
+        
+        # 生成历史分数折线图
+        if args.show_history:
+            generate_history_chart()
         
         logger.info("评估完成!")
         return True
@@ -389,6 +513,12 @@ def main():
         "--show-problems", "-p",
         action="store_true",
         help="显示问题查询"
+    )
+    
+    parser.add_argument(
+        "--show-history",
+        action="store_true",
+        help="显示历史分数折线图"
     )
     
     parser.add_argument(
