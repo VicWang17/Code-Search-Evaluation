@@ -334,7 +334,17 @@ class EvaluationMetrics:
     
     def _normalize_path(self, path: str) -> str:
         """规范化文件路径"""
-        return path.replace("\\", "/").lower().strip()
+        # 统一路径分隔符和大小写
+        path = path.replace("\\", "/").lower().strip()
+        
+        # 移除项目根目录前缀（如果存在）
+        root_dirs = ["fuint-uniapp-master/", "src/", "app/"]
+        for root_dir in root_dirs:
+            if path.startswith(root_dir):
+                path = path[len(root_dir):]
+                break
+                
+        return path
     
     def _is_partial_match(self, path1: str, path2: str) -> bool:
         """判断是否为部分匹配"""
