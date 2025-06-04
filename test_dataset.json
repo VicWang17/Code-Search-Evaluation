@@ -1,7 +1,7 @@
 {
   "meta": {
-    "version": "1.0.0",
-    "description": "代码检索评估测试数据集",
+    "version": "2.0.0",
+    "description": "代码检索评估测试数据集 - 基于fuint-uniapp-master项目",
     "created_date": "2024-03-20",
     "total_cases": 20,
     "categories": ["style", "function", "layout", "api"]
@@ -9,380 +9,265 @@
   "test_cases": [
     {
       "idx": "fuint-test-001",
-      "query": "在积分兑换页面中，商品列表的样式需要优化，让它更美观",
+      "query": "在首页中，需要优化页面组件的展示样式",
       "category": "style",
-      "description": "测试积分兑换页面商品列表的CSS样式检索",
+      "description": "测试首页页面组件样式的检索",
       "expected_results": [
         {
-          "path": "pages\\points\\exchange.vue",
-          "relevance_score": 1.0,
-          "reason": "包含积分商品列表的完整样式定义",
-          "expected_keywords": ["goods-list", "goods-item", "point-price"]
+          "path": "pages/index/index.vue"
         },
         {
-          "path": "components\\page\\goods\\index.vue",
-          "relevance_score": 0.8,
-          "reason": "包含通用的商品列表组件样式",
-          "expected_keywords": ["goods-list", "goods-item", "price"]
+          "path": "components/page/index.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-002",
-      "query": "在用户登录时，需要调用登录接口进行身份验证",
-      "category": "api",
-      "description": "测试用户登录相关API接口的检索",
+      "query": "在会员登录页面中，需要实现用户登录验证功能",
+      "category": "function",
+      "description": "测试用户登录功能的检索",
       "expected_results": [
         {
-          "path": "api\\login\\index.js",
-          "relevance_score": 1.0,
-          "reason": "用户登录的主要API接口文件，包含登录、注册、微信授权等核心功能",
-          "expected_keywords": [
-            "login",
-            "register",
-            "mpWxLogin",
-            "mpWxAuth",
-            "authLoginConfig"
-          ]
+          "path": "pages/login/index.vue"
         },
         {
-          "path": "store\\modules\\user.js",
-          "relevance_score": 0.9,
-          "reason": "用户状态管理模块，包含登录、注册、登出等状态管理功能",
-          "expected_keywords": [
-            "Login",
-            "Register",
-            "Logout",
-            "MpWxAuthLogin",
-            "token",
-            "userId"
-          ]
-        },
-        {
-          "path": "pages\\login\\index.vue",
-          "relevance_score": 0.8,
-          "reason": "登录页面主入口，包含登录流程控制和微信授权处理",
-          "expected_keywords": [
-            "login",
-            "authLoginConfig",
-            "isWechat",
-            "checkLogin"
-          ]
-        },
-        {
-          "path": "pages\\login\\auth.vue",
-          "relevance_score": 0.7,
-          "reason": "微信授权登录页面，处理微信授权回调",
-          "expected_keywords": [
-            "doAuth",
-            "MpWxAuthLogin",
-            "code",
-            "authorize"
-          ]
+          "path": "api/login/index.js"
         }
-      ],
-      "weight": 1.2
+      ]
     },
     {
       "idx": "fuint-test-003",
-      "query": "在优惠券列表页面中，优惠券卡片的样式需要重新设计",
+      "query": "在优惠券列表页面中，需要优化券列表的展示效果",
       "category": "style",
-      "description": "测试优惠券展示卡片的样式设计检索",
+      "description": "测试优惠券列表样式的检索",
       "expected_results": [
         {
-          "path": "pages\\coupon\\list.vue",
-          "relevance_score": 1.0,
-          "reason": "优惠券列表页面，包含卡片样式",
-          "expected_keywords": ["coupon", "card", "style"]
+          "path": "pages/coupon/list.vue"
         },
         {
-          "path": "pages\\my-coupon\\list.vue",
-          "relevance_score": 0.9,
-          "reason": "我的优惠券页面，包含卡片展示",
-          "expected_keywords": ["my-coupon", "card", "design"]
+          "path": "components/page/coupon/index.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-004",
-      "query": "在商品详情页面中，需要添加商品规格选择功能",
+      "query": "在结算中心页面中，需要实现订单结算功能",
       "category": "function",
-      "description": "测试商品规格选择功能的检索",
+      "description": "测试订单结算功能的检索",
       "expected_results": [
         {
-          "path": "pages\\goods\\detail.vue",
-          "relevance_score": 1.0,
-          "reason": "商品详情页面，包含规格选择功能",
-          "expected_keywords": ["spec", "select", "goods"]
+          "path": "pages/settlement/index.vue"
+        },
+        {
+          "path": "api/settlement.js"
         }
-      ],
-      "weight": 1.1
+      ]
     },
     {
       "idx": "fuint-test-005",
-      "query": "在订单列表页面中，需要优化订单卡片的布局",
+      "query": "在会员中心页面中，需要优化功能菜单的布局",
       "category": "layout",
-      "description": "测试订单列表布局的检索",
+      "description": "测试会员中心功能菜单布局的检索",
       "expected_results": [
         {
-          "path": "pages\\order\\list.vue",
-          "relevance_score": 1.0,
-          "reason": "订单列表页面，包含订单卡片布局",
-          "expected_keywords": ["order", "card", "layout"]
+          "path": "pages/user/index.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-006",
-      "query": "在购物车页面中，需要实现商品数量修改功能",
+      "query": "在积分兑换页面中，需要实现商品兑换功能",
       "category": "function",
-      "description": "测试购物车商品数量修改功能的检索",
+      "description": "测试积分商品兑换功能的检索",
       "expected_results": [
         {
-          "path": "pages\\cart\\index.vue",
-          "relevance_score": 1.0,
-          "reason": "购物车页面，包含数量修改功能",
-          "expected_keywords": ["cart", "quantity", "update"]
+          "path": "pages/points/exchange.vue"
+        },
+        {
+          "path": "api/points/exchange.js"
         }
-      ],
-      "weight": 1.1
+      ]
     },
     {
       "idx": "fuint-test-007",
-      "query": "在会员中心页面中，需要优化会员等级展示样式",
+      "query": "在商品评价页面中，需要优化评价表单的样式",
       "category": "style",
-      "description": "测试会员等级展示样式的检索",
+      "description": "测试商品评价表单样式的检索",
       "expected_results": [
         {
-          "path": "pages\\user\\vip.vue",
-          "relevance_score": 1.0,
-          "reason": "会员中心页面，包含等级展示样式",
-          "expected_keywords": ["vip", "level", "style"]
+          "path": "pages/comment/index.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-008",
-      "query": "在商品搜索页面中，需要实现搜索历史记录功能",
+      "query": "在商家管理页面中，需要实现商户信息管理功能",
       "category": "function",
-      "description": "测试搜索历史记录功能的检索",
+      "description": "测试商户信息管理功能的检索",
       "expected_results": [
         {
-          "path": "pages\\search\\index.vue",
-          "relevance_score": 1.0,
-          "reason": "搜索页面，包含历史记录功能",
-          "expected_keywords": ["search", "history", "record"]
+          "path": "pages/merchant/index.vue"
+        },
+        {
+          "path": "api/merchant.js"
         }
-      ],
-      "weight": 1.1
+      ]
     },
     {
       "idx": "fuint-test-009",
-      "query": "在商品分类页面中，需要优化分类导航栏的布局",
+      "query": "在订单确认页面中，需要优化商品信息的布局",
       "category": "layout",
-      "description": "测试分类导航栏布局的检索",
+      "description": "测试订单确认页面商品信息布局的检索",
       "expected_results": [
         {
-          "path": "pages\\category\\index.vue",
-          "relevance_score": 1.0,
-          "reason": "分类页面，包含导航栏布局",
-          "expected_keywords": ["category", "nav", "layout"]
+          "path": "pages/settlement/goods.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-010",
-      "query": "在用户注册时，需要调用注册接口进行账号创建",
-      "category": "api",
-      "description": "测试用户注册API接口的检索",
+      "query": "在授权登录页面中，需要实现第三方授权登录功能",
+      "category": "function",
+      "description": "测试第三方授权登录功能的检索",
       "expected_results": [
         {
-          "path": "api\\user\\register.js",
-          "relevance_score": 1.0,
-          "reason": "用户注册的主要API接口文件",
-          "expected_keywords": ["register", "user", "create"]
+          "path": "pages/login/auth.vue"
+        },
+        {
+          "path": "api/login/index.js"
         }
-      ],
-      "weight": 1.2
+      ]
     },
     {
       "idx": "fuint-test-011",
-      "query": "在商品评价页面中，需要优化评价列表的样式",
+      "query": "在首页中，需要优化页面横幅组件的展示效果",
       "category": "style",
-      "description": "测试商品评价列表样式的检索",
+      "description": "测试首页横幅组件样式的检索",
       "expected_results": [
         {
-          "path": "pages\\goods\\comment.vue",
-          "relevance_score": 1.0,
-          "reason": "商品评价页面，包含评价列表样式",
-          "expected_keywords": ["comment", "list", "style"]
+          "path": "pages/index/index.vue"
+        },
+        {
+          "path": "components/page/banner/index.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-012",
-      "query": "在支付页面中，需要集成微信支付功能",
+      "query": "在转赠记录页面中，需要实现优惠券转赠功能",
       "category": "function",
-      "description": "测试微信支付功能集成的检索",
+      "description": "测试优惠券转赠功能的检索",
       "expected_results": [
         {
-          "path": "utils\\app.js",
-          "relevance_score": 1.0,
-          "reason": "包含微信支付的核心实现",
-          "expected_keywords": ["wxPayment", "wechat", "pay"]
+          "path": "pages/give/index.vue"
         },
         {
-          "path": "common\\enum\\order\\PayType.js",
-          "relevance_score": 0.9,
-          "reason": "定义支付方式枚举",
-          "expected_keywords": ["PayType", "wechat", "payment"]
-        },
-        {
-          "path": "components\\pay-popup\\index.vue",
-          "relevance_score": 0.8,
-          "reason": "支付弹窗组件，包含微信支付UI和交互逻辑",
-          "expected_keywords": ["pay-popup", "wxPayment", "PayTypeEnum", "payment"]
-        },
-        {
-          "path": "pages\\settlement\\goods.vue",
-          "relevance_score": 0.7,
-          "reason": "商品结算页面，包含微信支付的具体业务逻辑",
-          "expected_keywords": ["doSubmitOrder", "wxPayment", "PayTypeEnum", "payment"]
+          "path": "api/give.js"
         }
-      ],
-      "weight": 1.2
+      ]
     },
     {
       "idx": "fuint-test-013",
-      "query": "在商户管理页面中，需要实现店铺列表展示功能",
-      "category": "function",
-      "description": "测试商户店铺列表功能的检索",
+      "query": "在自定义页面中，需要优化页面内容的布局",
+      "category": "layout",
+      "description": "测试自定义页面内容布局的检索",
       "expected_results": [
         {
-          "path": "pages\\merchant\\index.vue",
-          "relevance_score": 1.0,
-          "reason": "商户管理页面，包含店铺列表功能",
-          "expected_keywords": ["merchant", "shop", "list"]
+          "path": "pages/custom/index.vue"
         },
         {
-          "path": "api\\setting.js",
-          "relevance_score": 0.8,
-          "reason": "包含获取店铺列表的API",
-          "expected_keywords": ["getStoreList", "shop", "api"]
+          "path": "components/page/index.vue"
         }
-      ],
-      "weight": 1.1
+      ]
     },
     {
       "idx": "fuint-test-014",
-      "query": "在订单详情页面中，需要优化订单信息的布局",
-      "category": "layout",
-      "description": "测试订单详情布局的检索",
+      "query": "在个人信息页面中，需要实现用户信息编辑功能",
+      "category": "function",
+      "description": "测试用户信息编辑功能的检索",
       "expected_results": [
         {
-          "path": "pages\\order\\detail.vue",
-          "relevance_score": 1.0,
-          "reason": "订单详情页面，包含订单信息布局",
-          "expected_keywords": ["order", "detail", "layout"]
+          "path": "pages/user/setting.vue"
+        },
+        {
+          "path": "api/user.js"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-015",
-      "query": "在商品收藏页面中，需要实现收藏列表的样式",
+      "query": "在积分明细页面中，需要优化积分记录列表的样式",
       "category": "style",
-      "description": "测试商品收藏列表样式的检索",
+      "description": "测试积分明细列表样式的检索",
       "expected_results": [
         {
-          "path": "pages\\user\\collect.vue",
-          "relevance_score": 1.0,
-          "reason": "收藏页面，包含收藏列表样式",
-          "expected_keywords": ["collect", "list", "style"]
+          "path": "pages/points/detail.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-016",
-      "query": "在商品详情页面中，需要实现商品分享功能",
+      "query": "在核销确认页面中，需要实现优惠券核销功能",
       "category": "function",
-      "description": "测试商品分享功能的检索",
+      "description": "测试优惠券核销功能的检索",
       "expected_results": [
         {
-          "path": "pages\\goods\\detail.vue",
-          "relevance_score": 1.0,
-          "reason": "商品详情页面，包含分享功能",
-          "expected_keywords": ["share", "goods", "detail"]
+          "path": "pages/confirm/doConfirm.vue"
+        },
+        {
+          "path": "api/confirm.js"
         }
-      ],
-      "weight": 1.1
+      ]
     },
     {
       "idx": "fuint-test-017",
-      "query": "在首页中，需要优化轮播图的样式",
-      "category": "style",
-      "description": "测试首页轮播图样式的检索",
+      "query": "在我的卡券页面中，需要优化卡券展示的布局",
+      "category": "layout",
+      "description": "测试我的卡券页面布局的检索",
       "expected_results": [
         {
-          "path": "pages\\index\\index.vue",
-          "relevance_score": 1.0,
-          "reason": "首页，包含轮播图样式",
-          "expected_keywords": ["swiper", "banner", "style"]
+          "path": "pages/my-coupon/index.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-018",
-      "query": "在商品详情页面中，需要实现商品规格选择功能",
+      "query": "在会员列表页面中，需要实现会员信息管理功能",
       "category": "function",
-      "description": "测试商品规格选择功能的检索",
+      "description": "测试会员信息管理功能的检索",
       "expected_results": [
         {
-          "path": "pages\\goods\\detail.vue",
-          "relevance_score": 1.0,
-          "reason": "商品详情页面，包含规格选择功能",
-          "expected_keywords": ["spec", "select", "goods"]
+          "path": "pages/merchant/member/index.vue"
+        },
+        {
+          "path": "api/merchant/member.js"
         }
-      ],
-      "weight": 1.1
+      ]
     },
     {
       "idx": "fuint-test-019",
-      "query": "在用户中心页面中，需要优化个人信息的布局",
+      "query": "在优惠券详情页面中，需要优化券信息展示的布局",
       "category": "layout",
-      "description": "测试用户中心布局的检索",
+      "description": "测试优惠券详情页面布局的检索",
       "expected_results": [
         {
-          "path": "pages\\user\\index.vue",
-          "relevance_score": 1.0,
-          "reason": "用户中心页面，包含个人信息布局",
-          "expected_keywords": ["user", "info", "layout"]
+          "path": "pages/coupon/detail.vue"
         }
-      ],
-      "weight": 1.0
+      ]
     },
     {
       "idx": "fuint-test-020",
-      "query": "在商品列表页面中，需要实现商品筛选功能",
+      "query": "在会员充值页面中，需要实现余额充值功能",
       "category": "function",
-      "description": "测试商品筛选功能的检索",
+      "description": "测试会员余额充值功能的检索",
       "expected_results": [
         {
-          "path": "pages\\goods\\list.vue",
-          "relevance_score": 1.0,
-          "reason": "商品列表页面，包含筛选功能",
-          "expected_keywords": ["filter", "goods", "list"]
+          "path": "pages/merchant/balance/recharge.vue"
+        },
+        {
+          "path": "api/balance.js"
         }
-      ],
-      "weight": 1.1
+      ]
     }
   ]
-} 
+}

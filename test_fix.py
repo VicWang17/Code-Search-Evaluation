@@ -37,9 +37,9 @@ def explain_new_framework_metrics(metrics):
     """解释新评估框架指标"""
     print("\n新评估框架指标:")
     print(f"  总分: {metrics['total_score']:.3f}")
-    print(f"  相关性 (50%权重): {metrics['relevance']:.3f}")
+    print(f"  相关性 (30%权重): {metrics['relevance']:.3f}")
     print(f"  全面性 (30%权重): {metrics['completeness']:.3f}")
-    print(f"  可用性 (20%权重): {metrics['usability']:.3f}")
+    print(f"  可用性 (40%权重): {metrics['usability']:.3f}")
     
     # 详细解释
     details = metrics.get("details", {})
@@ -56,58 +56,52 @@ def explain_new_framework_metrics(metrics):
     print(f"  可用性权重: {weights.get('usability', 0.2)*100:.0f}%")
 
 def test_path_matching():
-    """测试路径匹配功能"""
-    print_separator("代码检索评估结果分析")
+    """测试路径匹配评分"""
+    # 测试数据
+    actual_results = [
+        {"path": "src/components/Button.vue"},
+        {"path": "src/components/Input.vue"},
+        {"path": "src/utils/helpers.js"}
+    ]
+    expected_results = [
+        {"path": "src/components/Button.vue"},
+        {"path": "src/components/Input.vue"}
+    ]
     
-    print("正在测试路径匹配功能...")
-    
-    # 创建评估指标实例
+    # 使用默认配置初始化EvaluationMetrics
     default_config = {
-        "framework_weights": {
-            "relevance": 0.5,
-            "completeness": 0.3,
-            "usability": 0.2
-        },
         "default_k": 10
     }
     metrics = EvaluationMetrics(default_config)
     
-    # 模拟API返回结果
-    actual_results = [
-        {"path": "pages\\points\\exchange.vue", "score": 0.8},
-        {"path": "pages\\coupon\\list.vue", "score": 0.6},
-        {"path": "api\\goods.js", "score": 0.4}
-    ]
+    # 计算路径匹配评分
+    score = metrics.calculate_path_matching_score(actual_results, expected_results)
     
-    # 期望结果
-    expected_results = [
-        {"path": "pages\\points\\exchange.vue", "relevance_score": 1.0},
-        {"path": "pages\\settlement\\style.scss", "relevance_score": 0.5}
-    ]
+    # 验证结果
+    assert score["total_score"] == 1.0  # 两个完全匹配
+    assert score["exact_matches"] == 2
+    assert score["partial_matches"] == 0
+    assert score["extension_matches"] == 0
+    
+    print_separator("代码检索评估结果分析")
+    
+    print("正在测试路径匹配功能...")
     
     print("\n测试数据说明:")
     print("  查询: '积分商品列表样式'")
     print("  API返回结果:")
     for i, result in enumerate(actual_results, 1):
-        print(f"    {i}. {result['path']} (分数: {result['score']})")
+        print(f"    {i}. {result['path']}")
     
     print("  期望结果:")
     for i, result in enumerate(expected_results, 1):
-        print(f"    {i}. {result['path']} (相关性: {result['relevance_score']})")
-    
-    # 测试配置格式的权重参数（模拟config.py中的格式）
-    config_weights = {
-        "exact_match_weight": 1.0,
-        "partial_match_weight": 0.7,
-        "extension_match_weight": 0.3
-    }
+        print(f"    {i}. {result['path']}")
     
     try:
         # 测试路径匹配
         result = metrics.calculate_path_matching_score(
             actual_results, 
-            expected_results, 
-            config_weights
+            expected_results
         )
         
         print("\n路径匹配计算成功!")

@@ -418,9 +418,9 @@ def show_summary(results, debug=False):
         
         # 三个维度
         dimensions = [
-            ("avg_relevance", "平均相关性", weights.get("relevance", 0.5)),
+            ("avg_relevance", "平均相关性", weights.get("relevance", 0.3)),
             ("avg_completeness", "平均全面性", weights.get("completeness", 0.3)),
-            ("avg_usability", "平均可用性", weights.get("usability", 0.2))
+            ("avg_usability", "平均可用性", weights.get("usability", 0.4))
         ]
         
         for metric_key, metric_name, weight in dimensions:
@@ -538,4 +538,4 @@ def main():
     sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -17,12 +17,12 @@ API_CONFIG = {
     # 请根据您的模型API修改，例如:
     # - "/api/v1/search"
     # - "/search/semantic"
-    "endpoint": "/api/search/code_by_hyde",
+    "endpoint": "/api/search/code_by_hybrid",
     
     # 您要评估的项目ID (示例: "5")
     # 这应该是您在检索系统中的项目标识符
     # 不同项目ID对应不同的代码库
-    "project_id": "16",
+    "project_id": "17",
     
     # 每次请求返回的结果数量
     # 建议设置为10-20，用于评估前K个结果的质量
@@ -34,31 +34,12 @@ API_CONFIG = {
 
 # 评估配置
 EVALUATION_CONFIG = {
-    # 新评估框架权重
-    "framework_weights": {
-        "relevance": 0.3,    # 相关性权重 (精确率)
-        "completeness": 0.3, # 全面性权重 (召回率)
-        "usability": 0.4     # 可用性权重 (MRR)
-    },
-    
-    # 相关性判断阈值 (只要相关就是1，不相关就是0)
-    "relevance_threshold": 0.5,  # 超过此阈值认为相关
-    
-    # Top-K评估参数 (用于计算相关性和全面性)
-    "top_k_values": [1, 3, 5, 10],
-    "default_k": 10,  # 默认使用前10个结果进行评估
-    
-    # 分数分析参数
-    "score_analysis": {
-        "min_score_threshold": 0.1,  # 最低分数阈值
-        "score_bins": 10,            # 分数分布区间数
-    },
-    
-    # 路径匹配参数 (保留用于详细分析)
+    "default_k": 10,  # 默认评估前k个结果
+    "top_k_values": [1, 3, 5, 10],  # 评估的K值列表
     "path_matching": {
-        "exact_match_weight": 1.0,      # 精确匹配权重
-        "partial_match_weight": 0.7,    # 部分匹配权重
-        "extension_match_weight": 0.3,  # 文件扩展名匹配权重
+        "exact_match": 1.0,
+        "partial_match": 0.7,
+        "extension_match": 0.3
     }
 }
 
@@ -95,31 +76,19 @@ LOGGING_CONFIG = {
     "console_output": True
 }
 
-# 测试类别配置
+# 类别配置
 CATEGORY_CONFIG = {
-    "style": {
-        "name": "样式相关",
-        "description": "CSS样式、UI设计相关的查询",
-        "weight": 1.0,
-        "expected_extensions": [".vue", ".scss", ".css"]
+    "frontend": {
+        "name": "前端开发",
+        "description": "前端相关的代码搜索"
     },
-    "function": {
-        "name": "功能相关", 
-        "description": "业务逻辑、功能实现相关的查询",
-        "weight": 1.2,  # 功能查询权重更高
-        "expected_extensions": [".js", ".vue", ".ts"]
+    "backend": {
+        "name": "后端开发",
+        "description": "后端相关的代码搜索"
     },
-    "layout": {
-        "name": "布局相关",
-        "description": "页面布局、组件排列相关的查询", 
-        "weight": 1.0,
-        "expected_extensions": [".vue", ".html"]
-    },
-    "api": {
-        "name": "接口相关",
-        "description": "API调用、数据交互相关的查询",
-        "weight": 1.1,
-        "expected_extensions": [".js", ".ts"]
+    "database": {
+        "name": "数据库",
+        "description": "数据库相关的代码搜索"
     }
 }
 

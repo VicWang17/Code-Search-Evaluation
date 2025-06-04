@@ -21,11 +21,6 @@ class EvaluationMetrics:
         """
         self.config = config
         self.logger = logging.getLogger(__name__)
-        self.framework_weights = self.config.get("framework_weights", {
-            "relevance": 0.5,
-            "completeness": 0.3, 
-            "usability": 0.2
-        })
         self.default_k = self.config.get("default_k", 10)
     
     def calculate_new_framework_metrics(self, actual_results: List[Dict], 
@@ -84,9 +79,9 @@ class EvaluationMetrics:
         
         # 4. 总分: 相关性*0.3 + 全面性*0.3 + 可用性*0.4
         total_score = (
-            relevance * self.framework_weights["relevance"] +
-            completeness * self.framework_weights["completeness"] +
-            usability * self.framework_weights["usability"]
+            relevance * 0.3 +
+            completeness * 0.3 +
+            usability * 0.4
         )
         
         return {
@@ -98,40 +93,22 @@ class EvaluationMetrics:
                 "relevant_in_top_k": relevant_in_top_k,
                 "total_relevant": total_relevant,
                 "k": k,
-                "mrr": usability,
-                "weights": self.framework_weights.copy()
+                "mrr": usability
             }
         }
     
     def calculate_path_matching_score(self, actual_results: List[Dict], 
-                                    expected_results: List[Dict],
-                                    weights: Dict[str, float] = None) -> Dict[str, float]:
+                                    expected_results: List[Dict]) -> Dict[str, float]:
         """
         计算路径匹配评分
         
         Args:
             actual_results: 实际检索结果
             expected_results: 期望结果
-            weights: 匹配类型权重
             
         Returns:
             Dict: 路径匹配评分详情
         """
-        if weights is None:
-            weights = {
-                "exact_match": 1.0,
-                "partial_match": 0.7,
-                "extension_match": 0.3
-            }
-        
-        # 兼容配置文件中的键名格式
-        if "exact_match_weight" in weights:
-            weights = {
-                "exact_match": weights.get("exact_match_weight", 1.0),
-                "partial_match": weights.get("partial_match_weight", 0.7),
-                "extension_match": weights.get("extension_match_weight", 0.3)
-            }
-        
         if not actual_results or not expected_results:
             return {"total_score": 0.0, "exact_matches": 0, "partial_matches": 0, "extension_matches": 0}
         
@@ -157,9 +134,9 @@ class EvaluationMetrics:
         
         # 计算总分
         total_score = (
-            exact_matches * weights["exact_match"] +
-            partial_matches * weights["partial_match"] +
-            extension_matches * weights["extension_match"]
+            exact_matches * 1.0 +
+            partial_matches * 0.7 +
+            extension_matches * 0.3
         ) / len(expected_paths)
         
         return {
@@ -375,11 +352,6 @@ class CategoryEvaluator:
     def __init__(self):
         # 使用默认配置初始化EvaluationMetrics
         default_config = {
-            "framework_weights": {
-                "relevance": 0.5,
-                "completeness": 0.3,
-                "usability": 0.2
-            },
             "default_k": 10
         }
         self.metrics = EvaluationMetrics(default_config)
@@ -407,8 +379,6 @@ class CategoryEvaluator:
         category_metrics = {}
         for category, cat_results in category_results.items():
             if category in category_config:
-                weight = category_config[category].get("weight", 1.0)
-                
                 # 计算该类别的新框架指标
                 total_scores = [r.get("total_score", 0.0) for r in cat_results]
                 relevance_scores = [r.get("relevance", 0.0) for r in cat_results]
@@ -418,13 +388,11 @@ class CategoryEvaluator:
                 category_metrics[category] = {
                     "name": category_config[category].get("name", category),
                     "count": len(cat_results),
-                    "weight": weight,
                     # 新框架指标
                     "avg_total_score": np.mean(total_scores) if total_scores else 0.0,
                     "avg_relevance": np.mean(relevance_scores) if relevance_scores else 0.0,
                     "avg_completeness": np.mean(completeness_scores) if completeness_scores else 0.0,
-                    "avg_usability": np.mean(usability_scores) if usability_scores else 0.0,
-                    "weighted_score": np.mean(total_scores) * weight if total_scores else 0.0
+                    "avg_usability": np.mean(usability_scores) if usability_scores else 0.0
                 }
         
         return category_metrics
@@ -432,11 +400,6 @@ class CategoryEvaluator:
 if __name__ == "__main__":
     # 测试代码
     default_config = {
-        "framework_weights": {
-            "relevance": 0.5,
-            "completeness": 0.3,
-            "usability": 0.2
-        },
         "default_k": 10
     }
     metrics = EvaluationMetrics(default_config)
