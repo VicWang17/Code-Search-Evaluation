@@ -267,9 +267,8 @@ def run_evaluation(args):
         if args.save_history:
             save_history_score(results, timestamp)
         
-        # 生成报告
-        if args.generate_report:
-            generate_reports(results, timestamp)
+        # 生成报告（默认行为）
+        generate_reports(results, timestamp)
         
         # 显示简要结果
         show_summary(results, args.debug)
@@ -321,6 +320,7 @@ def generate_markdown_report(results, output_path):
     """生成Markdown格式的详细报告"""
     summary = results["summary_metrics"]
     meta = results["meta"]
+    config = results.get("config", {})
     
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write("# 代码检索评估报告\n\n")
@@ -332,6 +332,13 @@ def generate_markdown_report(results, output_path):
         f.write(f"- **成功评估**: {meta['successful_evaluations']}\n")
         f.write(f"- **失败评估**: {meta['failed_evaluations']}\n")
         f.write(f"- **成功率**: {summary['evaluation_statistics']['success_rate']:.1%}\n\n")
+        
+        api_config = config.get("api", {})
+        # API配置信息
+        f.write("## API配置\n\n")
+        f.write(f"- **基础URL**: {api_config.get('base_url', 'N/A')}\n")
+        f.write(f"- **API端点**: {api_config.get('endpoint', 'N/A')}\n")
+        f.write(f"- **项目ID**: {api_config.get('project_id', 'N/A')}\n\n")
         
         # 整体性能
         successful_results = [r for r in results["detailed_results"] if r.get("success", False)]
@@ -346,26 +353,42 @@ def generate_markdown_report(results, output_path):
             f.write(f"- **平均相关性**: {np.mean(relevance_scores):.3f}\n")
             f.write(f"- **平均全面性**: {np.mean(completeness_scores):.3f}\n")
             f.write(f"- **平均可用性**: {np.mean(usability_scores):.3f}\n\n")
+
         
-        # 新评估框架指标
-        if "new_framework_performance" in summary:
-            f.write("## 新评估框架表现\n\n")
-            new_framework = summary["new_framework_performance"]
-            f.write(f"- **平均综合评分**: {new_framework['avg_total_score']:.3f}\n")
-            f.write(f"- **平均相关性**: {new_framework['avg_relevance']:.3f} (权重30%)\n")
-            f.write(f"- **平均全面性**: {new_framework['avg_completeness']:.3f} (权重30%)\n")
-            f.write(f"- **平均可用性**: {new_framework['avg_usability']:.3f} (权重40%)\n\n")
-        
-        # 分类别性能
-        if "category_metrics" in results:
-            f.write("## 分类别性能\n\n")
-            for category, cat_metrics in results["category_metrics"].items():
-                f.write(f"### {cat_metrics.get('name', category)}\n\n")
-                f.write(f"- **测试案例数**: {cat_metrics['count']}\n")
-                f.write(f"- **平均总分**: {cat_metrics['avg_total_score']:.3f}\n")
-                f.write(f"- **平均相关性**: {cat_metrics['avg_relevance']:.3f}\n")
-                f.write(f"- **平均全面性**: {cat_metrics['avg_completeness']:.3f}\n")
-                f.write(f"- **平均可用性**: {cat_metrics['avg_usability']:.3f}\n\n")
+        # 详细测试样例结果
+        f.write("## 详细测试样例结果\n\n")
+        for idx, result in enumerate(results["detailed_results"], 1):
+            f.write(f"### 测试样例 {idx}\n\n")
+            f.write(f"- **查询语句**: {result.get('query', 'N/A')}\n")
+            f.write(f"- **类别**: {result.get('category', 'N/A')}\n")
+            f.write(f"- **描述**: {result.get('description', 'N/A')}\n")
+            f.write(f"- **评估状态**: {'成功' if result.get('success', False) else '失败'}\n")
+            
+            if result.get('success', False):
+                f.write(f"- **总分**: {result.get('total_score', 0.0):.3f}\n")
+                f.write(f"- **相关性**: {result.get('relevance', 0.0):.3f}\n")
+                f.write(f"- **全面性**: {result.get('completeness', 0.0):.3f}\n")
+                f.write(f"- **可用性**: {result.get('usability', 0.0):.3f}\n")
+                
+                # 检索结果
+                if "retrieved_results" in result:
+                    f.write("\n#### 检索结果\n\n")
+                    for rank, res in enumerate(result["retrieved_results"], 1):
+                        f.write(f"##### 结果 {rank}\n\n")
+                        f.write(f"- **文件路径**: {res.get('path', 'N/A')}\n")
+                        f.write(f"- **相关性分数**: {res.get('score', 0.0):.3f}\n")
+                        if "snippet" in res:
+                            f.write("\n```\n")
+                            f.write(res["snippet"])
+                            f.write("\n```\n")
+                        f.write("\n")
+            
+            # 错误信息
+            if not result.get('success', False) and "error" in result:
+                f.write(f"\n#### 错误信息\n\n")
+                f.write(f"```\n{result['error']}\n```\n")
+            
+            f.write("\n---\n\n")
 
 def generate_summary_report(results, output_path):
     """生成简要文本报告"""
@@ -493,38 +516,32 @@ def main():
     parser.add_argument(
         "--category", "-c",
         type=str,
-        choices=["style", "function", "layout", "api"],
+        choices=list(CATEGORY_CONFIG.keys()),
         help="按类别过滤测试案例"
-    )
-    
-    parser.add_argument(
-        "--generate-report", "-r",
-        action="store_true",
-        help="生成详细报告"
-    )
-    
-    parser.add_argument(
-        "--save-history",
-        action="store_true",
-        help="保存历史结果"
-    )
-    
-    parser.add_argument(
-        "--show-problems", "-p",
-        action="store_true",
-        help="显示问题查询"
-    )
-    
-    parser.add_argument(
-        "--show-history",
-        action="store_true",
-        help="显示历史分数折线图"
     )
     
     parser.add_argument(
         "--debug",
         action="store_true",
         help="启用调试模式"
+    )
+    
+    parser.add_argument(
+        "--save-history",
+        action="store_true",
+        help="保存历史评估结果"
+    )
+    
+    parser.add_argument(
+        "--show-history",
+        action="store_true",
+        help="显示历史评估趋势图"
+    )
+    
+    parser.add_argument(
+        "--show-problems",
+        action="store_true",
+        help="显示问题查询"
     )
     
     args = parser.parse_args()
@@ -535,6 +552,7 @@ def main():
     # 运行评估
     success = run_evaluation(args)
     
+    # 设置退出码
     sys.exit(0 if success else 1)
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ API_CONFIG = {
     # 请根据您的模型API修改，例如:
     # - "/api/v1/search"
     # - "/search/semantic"
-    "endpoint": "/api/search/code_by_hybrid",
+    "endpoint": "/api/search/code",
     
     # 您要评估的项目ID (示例: "5")
     # 这应该是您在检索系统中的项目标识符

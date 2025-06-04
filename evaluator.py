@@ -177,10 +177,9 @@ class CodeSearchEvaluator:
             self.config["categories"]
         )
         
-        # 生成完整报告
-        full_report = {
+        # 构建完整评估结果
+        return {
             "meta": {
-                "dataset_info": dataset.get("meta", {}),
                 "evaluation_time": datetime.now().isoformat(),
                 "total_test_cases": len(test_cases),
                 "successful_evaluations": len([r for r in self.evaluation_results if r.get("success", False)]),
@@ -191,34 +190,6 @@ class CodeSearchEvaluator:
             "detailed_results": self.evaluation_results,
             "config": self.config
         }
-        
-        # 打印评估结果摘要
-        self.logger.info("\n评估完成!")
-        self.logger.info("\n新评估框架结果:")
-        if "new_framework_performance" in self.summary_metrics:
-            perf = self.summary_metrics["new_framework_performance"]
-            self.logger.info(f"平均总分: {perf['avg_total_score']:.3f}")
-            self.logger.info(f"平均相关性: {perf['avg_relevance']:.3f}")
-            self.logger.info(f"平均全面性: {perf['avg_completeness']:.3f}")
-            self.logger.info(f"平均可用性: {perf['avg_usability']:.3f}")
-        
-        self.logger.info("\n分类别评估结果:")
-        for category, metrics in category_metrics.items():
-            self.logger.info(f"\n{metrics['name']}:")
-            self.logger.info(f"  测试案例数: {metrics['count']}")
-            self.logger.info(f"  平均总分: {metrics['avg_total_score']:.3f}")
-            self.logger.info(f"  平均相关性: {metrics['avg_relevance']:.3f}")
-            self.logger.info(f"  平均全面性: {metrics['avg_completeness']:.3f}")
-            self.logger.info(f"  平均可用性: {metrics['avg_usability']:.3f}")
-        
-        self.logger.info("\n所有测试通过! 系统运行正常")
-        self.logger.info("\n接下来您可以:")
-        self.logger.info("  1. 运行完整评估: python run_evaluation.py")
-        self.logger.info("  2. 查看测试数据集: test_dataset.json")
-        self.logger.info("  3. 修改配置: config.py")
-        self.logger.info("  4. 查看结果: results/mini_evaluation_result.json")
-        
-        return full_report
     
     def _calculate_summary_metrics(self) -> Dict[str, Any]:
         """计算汇总指标"""
