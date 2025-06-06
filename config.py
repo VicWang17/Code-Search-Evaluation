@@ -29,7 +29,7 @@ API_CONFIG = {
     "limit": 10,
     
     # 请求超时时间（秒）
-    "timeout": 30
+    "timeout": 99999
 }
 
 # 评估配置

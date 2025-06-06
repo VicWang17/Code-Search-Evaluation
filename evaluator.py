@@ -69,6 +69,7 @@ class CodeSearchEvaluator:
         Returns:
             Dict: 评估结果
         """
+        start_time = time.time()  # 记录开始时间
         self.logger.info(f"开始评估查询: {query['query']}")
         
         try:
@@ -77,12 +78,14 @@ class CodeSearchEvaluator:
             
             # 检查API返回的错误
             if "error" in api_response:
-                self.logger.error(f"API返回错误: {api_response['error']}")
+                elapsed = time.time() - start_time
+                self.logger.error(f"API返回错误: {api_response['error']} | 用时: {elapsed:.2f}秒")
                 return {
                     "query": query["query"],
                     "error": api_response["error"],
                     "timestamp": datetime.now().isoformat(),
-                    "success": False
+                    "success": False,
+                    "elapsed_time": elapsed
                 }
             
             # 获取实际结果列表
@@ -110,18 +113,26 @@ class CodeSearchEvaluator:
                 "usability": metrics["usability"]
             }
             
-            self.logger.info(f"查询评估完成: {query['query']}")
-            self.logger.info(f"总分: {metrics['total_score']:.3f} (相关性={metrics['relevance']:.3f}, 全面性={metrics['completeness']:.3f}, 可用性={metrics['usability']:.3f})")
+            elapsed = time.time() - start_time
+            evaluation_result["elapsed_time"] = elapsed
+            
+            self.logger.info(
+                f"总分: {metrics['total_score']:.3f} "
+                f"(相关性={metrics['relevance']:.3f}, 全面性={metrics['completeness']:.3f}, 可用性={metrics['usability']:.3f}) | "
+                f"用时: {elapsed:.2f}秒"
+            )
             
             return evaluation_result
             
         except Exception as e:
-            self.logger.error(f"评估查询时出错: {str(e)}")
+            elapsed = time.time() - start_time
+            self.logger.error(f"评估查询时出错: {str(e)} | 用时: {elapsed:.2f}秒")
             return {
                 "query": query["query"],
                 "error": str(e),
                 "timestamp": datetime.now().isoformat(),
-                "success": False
+                "success": False,
+                "elapsed_time": elapsed
             }
     
     def evaluate_dataset(self, dataset: Dict[str, Any]) -> Dict[str, Any]:
@@ -143,6 +154,7 @@ class CodeSearchEvaluator:
         
         # 重置评估结果
         self.evaluation_results = []
+        total_start = time.time()  # 记录总开始时间
         
         # 批量评估
         for i, test_case in enumerate(test_cases):
@@ -168,6 +180,12 @@ class CodeSearchEvaluator:
                     "timestamp": datetime.now().isoformat()
                 })
         
+        # 计算总耗时和平均耗时
+        total_elapsed = time.time() - total_start
+        avg_elapsed = sum([r.get("elapsed_time", 0) for r in self.evaluation_results]) / len(self.evaluation_results)
+        
+        self.logger.info(f"评估完成 | 总耗时: {total_elapsed:.2f}秒 | 平均每个案例: {avg_elapsed:.2f}秒")
+        
         # 计算汇总指标
         self.summary_metrics = self._calculate_summary_metrics()
         
@@ -183,7 +201,9 @@ class CodeSearchEvaluator:
                 "evaluation_time": datetime.now().isoformat(),
                 "total_test_cases": len(test_cases),
                 "successful_evaluations": len([r for r in self.evaluation_results if r.get("success", False)]),
-                "failed_evaluations": len([r for r in self.evaluation_results if not r.get("success", False)])
+                "failed_evaluations": len([r for r in self.evaluation_results if not r.get("success", False)]),
+                "total_elapsed_time": total_elapsed,
+                "avg_elapsed_time": avg_elapsed
             },
             "summary_metrics": self.summary_metrics,
             "category_metrics": category_metrics,

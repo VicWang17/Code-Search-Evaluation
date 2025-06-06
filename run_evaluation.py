@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 import numpy as np
 import plotly.graph_objects as go
+import re
 
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(__file__))
@@ -182,6 +183,125 @@ def generate_history_chart():
             logger.exception("详细错误信息:")
         return False
 
+def generate_api_performance_chart():
+    """生成API性能对比图"""
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # 读取所有历史报告
+        reports_dir = PATH_CONFIG["reports_dir"]
+        report_files = [f for f in os.listdir(reports_dir) if f.startswith("evaluation_report_") and f.endswith(".md")]
+        
+        if not report_files:
+            logger.error("没有找到历史报告")
+            return False
+        
+        # 收集数据
+        api_data = {}  # {api_name: {"scores": [], "times": []}}
+        
+        for report_file in report_files:
+            with open(os.path.join(reports_dir, report_file), 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+                # 提取API信息
+                api_match = re.search(r"\*\*API端点\*\*: (.*?)\n", content)
+                if not api_match:
+                    continue
+                api_name = api_match.group(1)
+                
+                # 提取平均分数
+                score_match = re.search(r"\*\*平均总分\*\*: ([\d.]+)", content)
+                if not score_match:
+                    continue
+                score = float(score_match.group(1))
+                
+                # 提取平均时间
+                time_match = re.search(r"\*\*平均每个案例耗时\*\*: ([\d.]+)秒", content)
+                if not time_match:
+                    continue
+                time = float(time_match.group(1))
+                
+                # 存储数据
+                if api_name not in api_data:
+                    api_data[api_name] = {"scores": [], "times": []}
+                api_data[api_name]["scores"].append(score)
+                api_data[api_name]["times"].append(time)
+        
+        if not api_data:
+            logger.error("没有找到有效的API数据")
+            return False
+        
+        # 计算每个API的平均值
+        api_metrics = {}
+        for api_name, data in api_data.items():
+            api_metrics[api_name] = {
+                "avg_score": sum(data["scores"]) / len(data["scores"]),
+                "avg_time": sum(data["times"]) / len(data["times"])
+            }
+        
+        # 创建图表
+        fig = go.Figure()
+        
+        # 添加分数折线图
+        fig.add_trace(go.Scatter(
+            x=list(api_metrics.keys()),
+            y=[metrics["avg_score"] for metrics in api_metrics.values()],
+            name='平均分数',
+            mode='lines+markers',
+            line=dict(color='#1f77b4', width=3),
+            marker=dict(size=10)
+        ))
+        
+        # 添加时间柱状图
+        fig.add_trace(go.Bar(
+            x=list(api_metrics.keys()),
+            y=[metrics["avg_time"] for metrics in api_metrics.values()],
+            name='平均耗时(秒)',
+            marker_color='#ff7f0e',
+            opacity=0.7
+        ))
+        
+        # 设置图表布局
+        fig.update_layout(
+            title="API性能对比",
+            xaxis_title="API端点",
+            yaxis_title="数值",
+            showlegend=True,
+            hovermode='x unified',
+            # 添加双Y轴
+            yaxis=dict(
+                title="耗时(秒)",
+                side="left",
+                showgrid=True
+            ),
+            yaxis2=dict(
+                title="分数",
+                side="right",
+                overlaying="y",
+                range=[0, 1],
+                showgrid=False
+            )
+        )
+        
+        # 更新折线图的Y轴
+        fig.data[0].yaxis = "y2"
+        
+        # 保存图表
+        charts_dir = os.path.join(PATH_CONFIG["reports_dir"], "charts")
+        Path(charts_dir).mkdir(parents=True, exist_ok=True)
+        
+        chart_path = os.path.join(charts_dir, "api_performance.html")
+        fig.write_html(chart_path)
+        logger.info(f"API性能对比图已生成: {chart_path}")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"生成API性能对比图失败: {e}")
+        if args.debug:
+            logger.exception("详细错误信息:")
+        return False
+
 def run_evaluation(args):
     """运行评估"""
     logger = logging.getLogger(__name__)
@@ -280,6 +400,7 @@ def run_evaluation(args):
         # 生成历史分数折线图
         if args.show_history:
             generate_history_chart()
+            generate_api_performance_chart()
         
         logger.info("评估完成!")
         return True
@@ -331,7 +452,9 @@ def generate_markdown_report(results, output_path):
         f.write(f"- **测试案例总数**: {meta['total_test_cases']}\n")
         f.write(f"- **成功评估**: {meta['successful_evaluations']}\n")
         f.write(f"- **失败评估**: {meta['failed_evaluations']}\n")
-        f.write(f"- **成功率**: {summary['evaluation_statistics']['success_rate']:.1%}\n\n")
+        f.write(f"- **成功率**: {summary['evaluation_statistics']['success_rate']:.1%}\n")
+        f.write(f"- **总耗时**: {meta['total_elapsed_time']:.2f}秒\n")
+        f.write(f"- **平均每个案例耗时**: {meta['avg_elapsed_time']:.2f}秒\n\n")
         
         api_config = config.get("api", {})
         # API配置信息
@@ -363,6 +486,7 @@ def generate_markdown_report(results, output_path):
             f.write(f"- **类别**: {result.get('category', 'N/A')}\n")
             f.write(f"- **描述**: {result.get('description', 'N/A')}\n")
             f.write(f"- **评估状态**: {'成功' if result.get('success', False) else '失败'}\n")
+            f.write(f"- **耗时**: {result.get('elapsed_time', 0):.2f}秒\n")
             
             if result.get('success', False):
                 f.write(f"- **总分**: {result.get('total_score', 0.0):.3f}\n")
@@ -401,7 +525,9 @@ def generate_summary_report(results, output_path):
         
         f.write(f"评估时间: {meta['evaluation_time']}\n")
         f.write(f"测试案例: {meta['total_test_cases']} (成功: {meta['successful_evaluations']})\n")
-        f.write(f"成功率: {summary['evaluation_statistics']['success_rate']:.1%}\n\n")
+        f.write(f"成功率: {summary['evaluation_statistics']['success_rate']:.1%}\n")
+        f.write(f"总耗时: {meta['total_elapsed_time']:.2f}秒\n")
+        f.write(f"平均每个案例耗时: {meta['avg_elapsed_time']:.2f}秒\n\n")
         
         # 新评估框架表现
         if "new_framework_performance" in summary:
@@ -424,6 +550,8 @@ def show_summary(results, debug=False):
     print(f"评估时间: {meta['evaluation_time']}")
     print(f"测试案例: {meta['total_test_cases']} (成功: {meta['successful_evaluations']})")
     print(f"成功率: {summary['evaluation_statistics']['success_rate']:.1%}")
+    print(f"总耗时: {meta['total_elapsed_time']:.2f}秒")
+    print(f"平均每个案例耗时: {meta['avg_elapsed_time']:.2f}秒")
     
     # 使用格式化工具添加详细解释
     formatted_summary = format_summary_with_explanations(summary)
@@ -521,12 +649,6 @@ def main():
     )
     
     parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="启用调试模式"
-    )
-    
-    parser.add_argument(
         "--save-history",
         action="store_true",
         help="保存历史评估结果"
@@ -544,16 +666,25 @@ def main():
         help="显示问题查询"
     )
     
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="启用调试模式"
+    )
+    
     args = parser.parse_args()
     
     # 设置日志
     setup_logging(args.debug)
     
     # 运行评估
-    success = run_evaluation(args)
-    
-    # 设置退出码
-    sys.exit(0 if success else 1)
+    if run_evaluation(args):
+        # 生成历史分数折线图
+        if args.show_history:
+            generate_history_chart()
+            generate_api_performance_chart()
+    else:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
