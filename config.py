@@ -29,9 +29,9 @@ API_CONFIG = {
     "limit": 10,
     
 
-    "method": "hyde",
+    "method": "hybrid",
 
-    "rank_method": "vector",
+    "rank_method": "ai",
 
     # 请求超时时间（秒）
     "timeout": 99999

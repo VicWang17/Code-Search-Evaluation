@@ -54,8 +54,8 @@ class EvaluationMetrics:
                 }
             }
         
-        # 获取期望结果的路径集合
-        expected_paths = set(self._normalize_path(r.get("path", "")) for r in expected_results)
+        # 获取期望结果的路径列表（保留重复）
+        expected_paths = [self._normalize_path(r.get("path", "")) for r in expected_results]
         actual_paths = [self._normalize_path(r.get("path", "")) for r in actual_results]
         
         # 限制到前N个结果（N为期望结果数量）
@@ -63,10 +63,23 @@ class EvaluationMetrics:
         top_k_paths = actual_paths[:min(k,len(actual_paths))]
         top_n_paths = actual_paths[:N]
         
-        # 计算前N个结果中的相关数量
-        relevant_in_top_k = len([path for path in top_k_paths if path in expected_paths])
-        relevant_in_top_n = len([path for path in top_n_paths if path in expected_paths])
-        total_relevant = len(expected_paths)
+        # 计算前N个结果中的相关数量（考虑重复）
+        relevant_in_top_k = 0
+        for path in top_k_paths:
+            if path in expected_paths:
+                relevant_in_top_k += 1
+                # 从期望路径中移除已匹配的路径，避免重复计算
+                expected_paths.remove(path)
+        
+        # 重置期望路径列表用于计算top_n
+        expected_paths = [self._normalize_path(r.get("path", "")) for r in expected_results]
+        relevant_in_top_n = 0
+        for path in top_n_paths:
+            if path in expected_paths:
+                relevant_in_top_n += 1
+                expected_paths.remove(path)
+        
+        total_relevant = len(expected_results)
         
         # 1. 相关性 (精确率): 前N个结果中相关数/N
         relevance = relevant_in_top_n / N if N > 0 else 0.0
