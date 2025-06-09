@@ -1,0 +1,243 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "Vue商城项目代码检索评估测试数据集",
+    "created_date": "2024-12-19",
+    "total_cases": 20,
+    "categories": ["style", "function", "layout", "api", "component"]
+  },
+  "test_cases": [
+    {
+      "idx": "vue-test-001",
+      "query": "在首页中，需要优化轮播图组件的展示样式",
+      "category": "style",
+      "description": "测试首页轮播图样式的检索",
+      "expected_results": [
+        {
+          "path": "src/views/Home.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-002",
+      "query": "在购物车页面中，需要实现商品数量修改功能",
+      "category": "function",
+      "description": "测试购物车商品数量修改功能的检索",
+      "expected_results": [
+        {
+          "path": "src/views/Cart.vue"
+        },
+        {
+          "path": "src/store/index.js"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-003",
+      "query": "在商城页面中，需要优化商品筛选区域的布局",
+      "category": "layout",
+      "description": "测试商城页面筛选区域布局的检索",
+      "expected_results": [
+        {
+          "path": "src/views/Shop.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-004",
+      "query": "在支付页面中，需要实现订单提交功能",
+      "category": "function",
+      "description": "测试订单提交功能的检索",
+      "expected_results": [
+        {
+          "path": "src/views/Payment.vue"
+        },
+        {
+          "path": "src/api/index.js"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-005",
+      "query": "在用户中心页面中，需要优化功能菜单的布局",
+      "category": "layout",
+      "description": "测试用户中心功能菜单布局的检索",
+      "expected_results": [
+        {
+          "path": "src/views/User.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-006",
+      "query": "在商品详情页面中，需要实现商品收藏功能",
+      "category": "function",
+      "description": "测试商品收藏功能的检索",
+      "expected_results": [
+        {
+          "path": "src/views/ProductDetail.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-007",
+      "query": "在商品卡片组件中，需要优化商品信息展示的样式",
+      "category": "style",
+      "description": "测试商品卡片组件样式的检索",
+      "expected_results": [
+        {
+          "path": "src/components/ProductCard.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-008",
+      "query": "在API接口文件中，需要实现用户登录接口",
+      "category": "api",
+      "description": "测试用户登录接口的检索",
+      "expected_results": [
+        {
+          "path": "src/api/index.js"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-009",
+      "query": "在订单表格组件中，需要优化订单状态显示的布局",
+      "category": "layout",
+      "description": "测试订单表格组件布局的检索",
+      "expected_results": [
+        {
+          "path": "src/components/OrderTable.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-010",
+      "query": "在路由配置中，需要实现页面权限控制功能",
+      "category": "function",
+      "description": "测试路由权限控制功能的检索",
+      "expected_results": [
+        {
+          "path": "src/router/index.js"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-011",
+      "query": "在首页中，需要优化商品分类展示的样式",
+      "category": "style",
+      "description": "测试首页商品分类样式的检索",
+      "expected_results": [
+        {
+          "path": "src/views/Home.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-012",
+      "query": "在状态管理中，需要实现用户信息管理功能",
+      "category": "function",
+      "description": "测试用户信息管理功能的检索",
+      "expected_results": [
+        {
+          "path": "src/store/index.js"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-013",
+      "query": "在主应用文件中，需要优化导航栏的布局",
+      "category": "layout",
+      "description": "测试主应用导航栏布局的检索",
+      "expected_results": [
+        {
+          "path": "src/App.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-014",
+      "query": "在商品详情页面中，需要实现商品规格选择功能",
+      "category": "function",
+      "description": "测试商品规格选择功能的检索",
+      "expected_results": [
+        {
+          "path": "src/views/ProductDetail.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-015",
+      "query": "在支付页面中，需要优化收货信息表单的样式",
+      "category": "style",
+      "description": "测试支付页面收货信息表单样式的检索",
+      "expected_results": [
+        {
+          "path": "src/views/Payment.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-016",
+      "query": "在订单表格组件中，需要实现订单状态更新功能",
+      "category": "function",
+      "description": "测试订单状态更新功能的检索",
+      "expected_results": [
+        {
+          "path": "src/components/OrderTable.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-017",
+      "query": "在商城页面中，需要优化商品列表的展示布局",
+      "category": "layout",
+      "description": "测试商城页面商品列表布局的检索",
+      "expected_results": [
+        {
+          "path": "src/views/Shop.vue"
+        },
+        {
+          "path": "src/components/ProductCard.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-018",
+      "query": "在API接口文件中，需要实现商品数据获取功能",
+      "category": "api",
+      "description": "测试商品数据获取接口的检索",
+      "expected_results": [
+        {
+          "path": "src/api/index.js"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-019",
+      "query": "在商品详情页面中，需要优化商品评价展示的布局",
+      "category": "layout",
+      "description": "测试商品详情页面评价布局的检索",
+      "expected_results": [
+        {
+          "path": "src/views/ProductDetail.vue"
+        }
+      ]
+    },
+    {
+      "idx": "vue-test-020",
+      "query": "在购物车页面中，需要实现清空购物车功能",
+      "category": "function",
+      "description": "测试清空购物车功能的检索",
+      "expected_results": [
+        {
+          "path": "src/views/Cart.vue"
+        },
+        {
+          "path": "src/store/index.js"
+        }
+      ]
+    }
+  ]
+}

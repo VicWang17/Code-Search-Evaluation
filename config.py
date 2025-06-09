@@ -17,7 +17,7 @@ API_CONFIG = {
     # 请根据您的模型API修改，例如:
     # - "/api/v1/search"
     # - "/search/semantic"
-    "endpoint": "/api/search/code",
+    "endpoint": "/api/search/unified",
     
     # 您要评估的项目ID (示例: "5")
     # 这应该是您在检索系统中的项目标识符
@@ -28,6 +28,11 @@ API_CONFIG = {
     # 建议设置为10-20，用于评估前K个结果的质量
     "limit": 10,
     
+
+    "method": "hyde",
+
+    "rank_method": "vector",
+
     # 请求超时时间（秒）
     "timeout": 99999
 }

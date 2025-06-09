@@ -20,10 +20,12 @@ class CodeSearchAPIClient:
             config: API配置字典，包含base_url, endpoint, timeout等
         """
         self.base_url = config.get("base_url", "http://localhost:8000")
-        self.endpoint = config.get("endpoint", "/api/search/code_by_hyde")
+        self.endpoint = config.get("endpoint", "/api/search/unified")
         self.project_id = config.get("project_id", "5")
         self.limit = config.get("limit", 10)
         self.timeout = config.get("timeout", 30)
+        self.method = config.get("method", "original")
+        self.rank_method = config.get("rank_method", "vector")
         
         # 构建完整的API URL
         self.api_url = f"{self.base_url}{self.endpoint}"
@@ -53,7 +55,9 @@ class CodeSearchAPIClient:
         params = {
             "q": query,
             "limit": limit or self.limit,
-            "project_id": self.project_id
+            "project_id": self.project_id,
+            "method": self.method,
+            "rank_method": self.rank_method
         }
         
         try:
@@ -185,7 +189,9 @@ class CodeSearchAPIClient:
             "api_url": self.api_url,
             "project_id": self.project_id,
             "limit": str(self.limit),
-            "timeout": f"{self.timeout}s"
+            "timeout": f"{self.timeout}s",
+            "method": self.method,
+            "rank_method": self.rank_method
         }
 
 # 工厂函数

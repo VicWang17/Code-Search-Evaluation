@@ -197,17 +197,23 @@ def generate_api_performance_chart():
             return False
         
         # 收集数据
-        api_data = {}  # {api_name: {"scores": [], "times": []}}
+        api_data = {}  # {method: {rank_method: {"scores": [], "times": []}}}
         
         for report_file in report_files:
             with open(os.path.join(reports_dir, report_file), 'r', encoding='utf-8') as f:
                 content = f.read()
                 
-                # 提取API信息
-                api_match = re.search(r"\*\*API端点\*\*: (.*?)\n", content)
-                if not api_match:
+                # 提取搜索方法信息
+                method_match = re.search(r"\*\*搜索方法\*\*: (.*?)\n", content)
+                if not method_match:
                     continue
-                api_name = api_match.group(1)
+                method = method_match.group(1)
+                
+                # 提取排序方法信息
+                rank_method_match = re.search(r"\*\*排序方法\*\*: (.*?)\n", content)
+                if not rank_method_match:
+                    continue
+                rank_method = rank_method_match.group(1)
                 
                 # 提取平均分数
                 score_match = re.search(r"\*\*平均总分\*\*: ([\d.]+)", content)
@@ -222,52 +228,75 @@ def generate_api_performance_chart():
                 time = float(time_match.group(1))
                 
                 # 存储数据
-                if api_name not in api_data:
-                    api_data[api_name] = {"scores": [], "times": []}
-                api_data[api_name]["scores"].append(score)
-                api_data[api_name]["times"].append(time)
+                if method not in api_data:
+                    api_data[method] = {}
+                if rank_method not in api_data[method]:
+                    api_data[method][rank_method] = {"scores": [], "times": []}
+                api_data[method][rank_method]["scores"].append(score)
+                api_data[method][rank_method]["times"].append(time)
         
         if not api_data:
             logger.error("没有找到有效的API数据")
             return False
         
-        # 计算每个API的平均值
+        # 计算每个方法组合的平均值
         api_metrics = {}
-        for api_name, data in api_data.items():
-            api_metrics[api_name] = {
-                "avg_score": sum(data["scores"]) / len(data["scores"]),
-                "avg_time": sum(data["times"]) / len(data["times"])
-            }
+        for method, rank_methods in api_data.items():
+            api_metrics[method] = {}
+            for rank_method, data in rank_methods.items():
+                api_metrics[method][rank_method] = {
+                    "avg_score": sum(data["scores"]) / len(data["scores"]),
+                    "avg_time": sum(data["times"]) / len(data["times"])
+                }
         
         # 创建图表
         fig = go.Figure()
         
-        # 添加分数折线图
-        fig.add_trace(go.Scatter(
-            x=list(api_metrics.keys()),
-            y=[metrics["avg_score"] for metrics in api_metrics.values()],
-            name='平均分数',
-            mode='lines+markers',
-            line=dict(color='#1f77b4', width=3),
-            marker=dict(size=10)
-        ))
+        # 获取所有唯一的排序方法
+        rank_methods = set()
+        for method_data in api_metrics.values():
+            rank_methods.update(method_data.keys())
+        rank_methods = sorted(list(rank_methods))
         
-        # 添加时间柱状图
-        fig.add_trace(go.Bar(
-            x=list(api_metrics.keys()),
-            y=[metrics["avg_time"] for metrics in api_metrics.values()],
-            name='平均耗时(秒)',
-            marker_color='#ff7f0e',
-            opacity=0.7
-        ))
+        # 为每个排序方法创建一组柱状图
+        for rank_method in rank_methods:
+            # 准备数据
+            methods = []
+            scores = []
+            times = []
+            
+            for method in api_metrics.keys():
+                if rank_method in api_metrics[method]:
+                    methods.append(method)
+                    scores.append(api_metrics[method][rank_method]["avg_score"])
+                    times.append(api_metrics[method][rank_method]["avg_time"])
+            
+            # 添加分数折线图
+            fig.add_trace(go.Scatter(
+                x=methods,
+                y=scores,
+                name=f'{rank_method} - 分数',
+                mode='lines+markers',
+                line=dict(width=2),
+                marker=dict(size=8)
+            ))
+            
+            # 添加时间柱状图
+            fig.add_trace(go.Bar(
+                x=methods,
+                y=times,
+                name=f'{rank_method} - 耗时',
+                opacity=0.7
+            ))
         
         # 设置图表布局
         fig.update_layout(
-            title="API性能对比",
-            xaxis_title="API端点",
+            title="搜索方法性能对比",
+            xaxis_title="搜索方法",
             yaxis_title="数值",
             showlegend=True,
             hovermode='x unified',
+            barmode='group',  # 将柱状图分组显示
             # 添加双Y轴
             yaxis=dict(
                 title="耗时(秒)",
@@ -284,7 +313,8 @@ def generate_api_performance_chart():
         )
         
         # 更新折线图的Y轴
-        fig.data[0].yaxis = "y2"
+        for i in range(0, len(fig.data), 2):
+            fig.data[i].yaxis = "y2"
         
         # 保存图表
         charts_dir = os.path.join(PATH_CONFIG["reports_dir"], "charts")
@@ -292,12 +322,12 @@ def generate_api_performance_chart():
         
         chart_path = os.path.join(charts_dir, "api_performance.html")
         fig.write_html(chart_path)
-        logger.info(f"API性能对比图已生成: {chart_path}")
+        logger.info(f"搜索方法性能对比图已生成: {chart_path}")
         
         return True
         
     except Exception as e:
-        logger.error(f"生成API性能对比图失败: {e}")
+        logger.error(f"生成搜索方法性能对比图失败: {e}")
         if args.debug:
             logger.exception("详细错误信息:")
         return False
@@ -461,7 +491,9 @@ def generate_markdown_report(results, output_path):
         f.write("## API配置\n\n")
         f.write(f"- **基础URL**: {api_config.get('base_url', 'N/A')}\n")
         f.write(f"- **API端点**: {api_config.get('endpoint', 'N/A')}\n")
-        f.write(f"- **项目ID**: {api_config.get('project_id', 'N/A')}\n\n")
+        f.write(f"- **项目ID**: {api_config.get('project_id', 'N/A')}\n")
+        f.write(f"- **搜索方法**: {api_config.get('method', 'N/A')}\n")
+        f.write(f"- **排序方法**: {api_config.get('rank_method', 'N/A')}\n\n")
         
         # 整体性能
         successful_results = [r for r in results["detailed_results"] if r.get("success", False)]
