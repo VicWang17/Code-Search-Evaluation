@@ -19,6 +19,17 @@
       ]
     },
     {
+      "idx": "fuint-test-001",
+      "query": "首页上面那个图需要添加圆角和阴影效果",
+      "category": "style",
+      "description": "测试首页轮播图组件样式的检索",
+      "expected_results": [
+        {
+          "path": "components/page/banner/index.vue"
+        }
+      ]
+    },
+    {
       "idx": "fuint-test-002",
       "query": "在会员登录页面中，需要实现用户登录验证功能",
       "category": "function",
