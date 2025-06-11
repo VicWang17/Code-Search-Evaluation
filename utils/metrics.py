@@ -61,28 +61,33 @@ class EvaluationMetrics:
         # 限制到前N个结果（N为期望结果数量）
         N = len(expected_results)
         top_k_paths = actual_paths[:min(k,len(actual_paths))]
-        top_n_paths = actual_paths[:N]
         
-        # 计算前N个结果中的相关数量（考虑重复）
+        # 计算前k个结果中的相关数量（考虑重复）
         relevant_in_top_k = 0
+        expected_paths_copy = expected_paths.copy()
         for path in top_k_paths:
-            if path in expected_paths:
+            if path in expected_paths_copy:
                 relevant_in_top_k += 1
-                # 从期望路径中移除已匹配的路径，避免重复计算
-                expected_paths.remove(path)
-        
-        # 重置期望路径列表用于计算top_n
-        expected_paths = [self._normalize_path(r.get("path", "")) for r in expected_results]
-        relevant_in_top_n = 0
-        for path in top_n_paths:
-            if path in expected_paths:
-                relevant_in_top_n += 1
-                expected_paths.remove(path)
+                expected_paths_copy.remove(path)
         
         total_relevant = len(expected_results)
         
-        # 1. 相关性 (精确率): 前N个结果中相关数/N
-        relevance = relevant_in_top_n / N if N > 0 else 0.0
+        # 1. 相关性 (基于位置的评分)
+        # 首先检查是否所有expected paths都在前N位
+        actual_top_n = actual_paths[:N]
+        if all(path in actual_top_n for path in expected_paths):
+            relevance = 1.0
+        else:
+            # 计算每个expected path的位置分数
+            scores = []
+            for exp_path in expected_paths:
+                try:
+                    pos = actual_paths.index(exp_path) + 1  # 1-based position
+                    score = 1 / (1 + (math.log2(pos) ** 2))
+                    scores.append(score)
+                except ValueError:  # 如果路径没找到
+                    scores.append(0)
+            relevance = sum(scores) / len(expected_paths)
 
         # 2. 全面性 (召回率): 前k个结果中的相关数/总相关数
         completeness = relevant_in_top_k / total_relevant if total_relevant > 0 else 0.0

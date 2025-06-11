@@ -9,15 +9,12 @@
   "test_cases": [
     {
       "idx": "fuint-test-001",
-      "query": "在首页中，需要优化页面组件的展示样式",
+      "query": "首页的轮播图组件需要添加圆角和阴影效果",
       "category": "style",
-      "description": "测试首页页面组件样式的检索",
+      "description": "测试首页轮播图组件样式的检索",
       "expected_results": [
         {
-          "path": "pages/index/index.vue"
-        },
-        {
-          "path": "components/page/index.vue"
+          "path": "components/page/banner/index.vue"
         }
       ]
     },
