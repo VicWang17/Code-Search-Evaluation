@@ -31,7 +31,7 @@ API_CONFIG = {
 
     "method": "original",
 
-    "rank_method": "vector",
+    "rank_method": "hybrid",
 
     # 请求超时时间（秒）
     "timeout": 99999

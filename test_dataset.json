@@ -19,7 +19,7 @@
       ]
     },
     {
-      "idx": "fuint-test-001",
+      "idx": "fuint-test-001-1",
       "query": "首页上面那个图需要添加圆角和阴影效果",
       "category": "style",
       "description": "测试首页轮播图组件样式的检索",

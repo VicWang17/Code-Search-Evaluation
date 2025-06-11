@@ -2,6 +2,8 @@ import json
 import argparse
 from typing import List, Dict, Any, Set
 import sys
+import time
+from statistics import mean
 from config import API_CONFIG
 from utils.api_client import create_api_client
 
@@ -141,6 +143,37 @@ def evaluate_single_case(case: Dict[str, Any], mock_results: List[str] = None) -
         'actual_results': actual_results[:10]  # 只显示前10个结果
     }
 
+def evaluate_multiple_times(case: Dict[str, Any], times: int, delay: float = 0.5) -> List[Dict[str, Any]]:
+    """多次评估同一个用例"""
+    results = []
+    for i in range(times):
+        result = evaluate_single_case(case)
+        results.append(result)
+        print(f"\r评估进度: {i+1}/{times}, 当前得分: {result['final_score']:.3f}", end="")
+        if i < times - 1:  # 不是最后一次
+            time.sleep(delay)
+    print()  # 换行
+    return results
+
+def calculate_statistics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """计算多次评估的统计信息"""
+    if not results:
+        return {}
+        
+    metrics = ['relevance_score', 'completeness_score', 'mrr_score', 'final_score']
+    stats = {}
+    
+    for metric in metrics:
+        scores = [r[metric] for r in results if r[metric] is not None]
+        if scores:
+            stats[metric] = {
+                'avg': mean(scores),
+                'max': max(scores),
+                'min': min(scores)
+            }
+    
+    return stats
+
 def main():
     parser = argparse.ArgumentParser(description='调试单个测试用例或自定义查询')
     group = parser.add_mutually_exclusive_group(required=True)
@@ -149,6 +182,8 @@ def main():
     parser.add_argument('--dataset', type=str, default='test_dataset.json', help='测试数据集文件路径')
     parser.add_argument('--mock-results', type=str, nargs='+', default=None, help='模拟的检索结果路径列表')
     parser.add_argument('--expected', type=str, nargs='+', default=None, help='期望的结果路径（仅用于自定义查询）')
+    parser.add_argument('--times', type=int, default=1, help='评估次数')
+    parser.add_argument('--delay', type=float, default=0.5, help='每次评估之间的延迟（秒）')
     
     args = parser.parse_args()
     
@@ -167,19 +202,45 @@ def main():
         if case['expected_results']:
             print(f"期望结果: {[r['path'] for r in case['expected_results']]}")
         
-        # 评估结果
-        results = evaluate_single_case(case, args.mock_results)
+        # 多次评估
+        if args.times > 1:
+            print(f"\n开始进行 {args.times} 次评估...")
+            all_results = evaluate_multiple_times(case, args.times, args.delay)
+            stats = calculate_statistics(all_results)
+            
+            # 打印统计信息
+            print("\n统计信息:")
+            metrics_zh = {
+                'relevance_score': '相关性得分',
+                'completeness_score': '完整性得分',
+                'mrr_score': 'MRR得分',
+                'final_score': '综合得分'
+            }
+            
+            for metric, zh_name in metrics_zh.items():
+                if metric in stats:
+                    print(f"\n{zh_name}:")
+                    print(f"  平均值: {stats[metric]['avg']:.3f}")
+                    print(f"  最高分: {stats[metric]['max']:.3f}")
+                    print(f"  最低分: {stats[metric]['min']:.3f}")
+            
+            # 显示最后一次的详细结果
+            last_result = all_results[-1]
+        else:
+            # 单次评估
+            last_result = evaluate_single_case(case, args.mock_results)
         
-        # 只有在有期望结果时才显示评分
+        # 显示最后一次评估的详细结果
         if case['expected_results']:
-            print("\n评分结果:")
-            print(f"相关性得分: {results['relevance_score']:.3f}")
-            print(f"完整性得分: {results['completeness_score']:.3f}")
-            print(f"MRR得分: {results['mrr_score']:.3f}")
-            print(f"综合得分: {results['final_score']:.3f}")
+            if args.times == 1:  # 单次评估才显示详细评分
+                print("\n评分结果:")
+                print(f"相关性得分: {last_result['relevance_score']:.3f}")
+                print(f"完整性得分: {last_result['completeness_score']:.3f}")
+                print(f"MRR得分: {last_result['mrr_score']:.3f}")
+                print(f"综合得分: {last_result['final_score']:.3f}")
             
             print("\n详细信息:")
-            for i, (exp_path, pos) in enumerate(zip(results['expected_paths'], results['found_positions'])):
+            for i, (exp_path, pos) in enumerate(zip(last_result['expected_paths'], last_result['found_positions'])):
                 status = f"在第{pos}位" if pos > 0 else "未找到"
                 score = calculate_relevance_score(pos)
                 mrr = 1.0 / pos if pos > 0 else 0.0
@@ -189,7 +250,7 @@ def main():
                 print(f"  - 倒数排名得分: {mrr:.3f}")
         
         print("\n实际返回结果(前10个):")
-        for i, path in enumerate(results['actual_results'], 1):
+        for i, path in enumerate(last_result['actual_results'], 1):
             print(f"{i}. {path}")
             
     except Exception as e:
