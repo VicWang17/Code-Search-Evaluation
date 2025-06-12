@@ -29,7 +29,7 @@ API_CONFIG = {
     "limit": 10,
     
 
-    "method": "original",
+    "method": "hybrid",
 
     "rank_method": "hybrid",
 

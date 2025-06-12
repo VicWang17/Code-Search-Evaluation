@@ -1,11 +1,12 @@
 import json
 import argparse
-from typing import List, Dict, Any, Set
+from typing import List, Dict, Any, Set, Optional
 import sys
 import time
 from statistics import mean
 from config import API_CONFIG
 from utils.api_client import create_api_client
+import math
 
 def load_test_case(json_path: str, target_idx: str) -> Dict[str, Any]:
     """加载指定idx的测试用例"""
@@ -75,11 +76,26 @@ def search_code(query: str) -> List[str]:
         print(f"API调用失败: {str(e)}", file=sys.stderr)
         return []
 
-def calculate_relevance_score(actual_pos: int) -> float:
-    """计算位置相关性得分"""
-    if actual_pos <= 0:  # 未找到结果
-        return 0.0
-    return 1.0 / (1.0 + (2.0 * pow(max(0, actual_pos - 1), 2)))
+def calculate_relevance_scores(expected_paths: List[str], actual_results: List[str]) -> float:
+    """计算相关性得分，与metrics.py保持一致"""
+    N = len(expected_paths)
+    actual_top_n = actual_results[:N]
+    
+    # 如果所有expected paths都在前N位，直接返回1.0
+    if all(path in actual_top_n for path in expected_paths):
+        return 1.0
+        
+    # 计算每个expected path的位置分数
+    scores = []
+    for exp_path in expected_paths:
+        try:
+            pos = actual_results.index(exp_path) + 1  # 1-based position
+            score = 1 / (1 + (math.log2(pos) ** 2))
+            scores.append(score)
+        except ValueError:  # 如果路径没找到
+            scores.append(0)
+    
+    return sum(scores) / len(expected_paths)
 
 def calculate_completeness(expected: Set[str], actual: Set[str]) -> float:
     """计算完整性得分 (召回率)"""
@@ -88,59 +104,63 @@ def calculate_completeness(expected: Set[str], actual: Set[str]) -> float:
     return len(expected.intersection(actual)) / len(expected)
 
 def calculate_mrr(expected_paths: List[str], actual_results: List[str]) -> float:
-    """计算MRR (Mean Reciprocal Rank) 得分"""
+    """计算MRR (Mean Reciprocal Rank) 得分
+    只计算第一个相关结果的位置倒数
+    """
     if not expected_paths or not actual_results:
         return 0.0
+        
+    # 转换为集合以加快查找
+    expected_set = set(expected_paths)
     
-    reciprocal_ranks = []
-    for exp_path in expected_paths:
-        try:
-            rank = actual_results.index(exp_path) + 1  # 1-based rank
-            reciprocal_ranks.append(1.0 / rank)
-        except ValueError:
-            reciprocal_ranks.append(0.0)
-    
-    return sum(reciprocal_ranks) / len(expected_paths)
+    # 找到第一个相关结果的位置
+    for i, path in enumerate(actual_results):
+        if path in expected_set:
+            return 1.0 / (i + 1)
+            
+    return 0.0
 
-def evaluate_single_case(case: Dict[str, Any], mock_results: List[str] = None) -> Dict[str, Any]:
-    """评估单个测试用例的结果"""
-    expected_paths = [r['path'] for r in case['expected_results']]
+def evaluate_single_case(case: Dict[str, Any], mock_results: Optional[List[str]] = None) -> Dict[str, Any]:
+    """评估单个测试用例"""
+    expected_paths = [r.get("path", "") for r in case.get("expected_results", [])]
     
-    # 如果没有提供mock结果，则调用API获取结果
+    # 获取实际结果
     actual_results = mock_results if mock_results is not None else search_code(case['query'])
     
+    # 找到期望路径在实际结果中的位置
     found_positions = []
-    # 记录每个期望结果在实际结果中的位置
     for exp_path in expected_paths:
         try:
-            pos = actual_results.index(exp_path) + 1  # 1-based position
-            found_positions.append(pos)
+            pos = actual_results.index(exp_path) + 1  # 转换为1-based索引
         except ValueError:
-            found_positions.append(0)  # 未找到则记为0
+            pos = 0  # 未找到
+        found_positions.append(pos)
     
     # 计算相关性得分
-    relevance_scores = [calculate_relevance_score(pos) for pos in found_positions]
-    avg_relevance = sum(relevance_scores) / len(relevance_scores) if relevance_scores else 0
+    relevance_scores = calculate_relevance_scores(expected_paths, actual_results)
     
     # 计算完整性得分
-    expected_set = set(expected_paths)
-    actual_set = set(actual_results)
-    completeness = calculate_completeness(expected_set, actual_set)
+    completeness = calculate_completeness(set(expected_paths), set(actual_results))
     
     # 计算MRR得分
     mrr_score = calculate_mrr(expected_paths, actual_results)
     
-    # 计算综合得分
-    final_score = (avg_relevance + completeness + mrr_score) / 3 if expected_paths else None
+    # 计算综合得分 (0.3 * 相关性 + 0.3 * 完整性 + 0.4 * MRR)
+    final_score = (
+        relevance_scores * 0.3 +
+        completeness * 0.3 +
+        mrr_score * 0.4
+    ) if expected_paths else None
     
     return {
-        'relevance_score': avg_relevance if expected_paths else None,
+        'query': case.get('query', ''),  # 添加查询字段
+        'expected_paths': expected_paths,
+        'actual_results': actual_results,
+        'found_positions': found_positions,
+        'relevance_score': relevance_scores if expected_paths else None,
         'completeness_score': completeness if expected_paths else None,
         'mrr_score': mrr_score if expected_paths else None,
-        'final_score': final_score,
-        'found_positions': found_positions,
-        'expected_paths': expected_paths,
-        'actual_results': actual_results[:10]  # 只显示前10个结果
+        'final_score': final_score
     }
 
 def evaluate_multiple_times(case: Dict[str, Any], times: int, delay: float = 0.5) -> List[Dict[str, Any]]:
@@ -173,6 +193,50 @@ def calculate_statistics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
             }
     
     return stats
+
+def print_detailed_results(last_result: Dict[str, Any], mock_results: Optional[List[str]] = None):
+    """打印详细的评估结果"""
+    if not last_result:
+        print("没有可用的评估结果")
+        return
+        
+    try:
+        print("\n详细信息:")
+        print(f"查询: {last_result.get('query', '未提供查询')}")
+        print(f"期望路径数量: {len(last_result['expected_paths'])}")
+        print(f"实际返回数量: {len(last_result['actual_results'])}")
+        
+        if last_result['final_score'] is not None:
+            print("\n各项得分:")
+            print(f"相关性得分: {last_result['relevance_score']:.4f}")
+            print(f"完整性得分: {last_result['completeness_score']:.4f}")
+            print(f"MRR得分: {last_result['mrr_score']:.4f}")
+            print(f"综合得分: {last_result['final_score']:.4f}")
+        
+        print("\n期望结果详情:")
+        actual_results = last_result['actual_results']
+        for i, exp_path in enumerate(last_result['expected_paths']):
+            try:
+                pos = actual_results.index(exp_path) + 1
+                status = f"在第{pos}位"
+                score = 1.0 / (1.0 + (math.log2(pos) ** 2))
+                mrr = 1.0 / pos
+            except ValueError:
+                status = "未找到"
+                score = 0.0
+                mrr = 0.0
+            
+            print(f"期望结果 {i+1}: {exp_path}")
+            print(f"  状态: {status}")
+            print(f"  相关性得分: {score:.4f}")
+            print(f"  MRR得分: {mrr:.4f}")
+        
+        print("\n实际返回结果:")
+        for i, result in enumerate(actual_results[:10], 1):  # 只显示前10个结果
+            print(f"{i}. {result}")
+    except Exception as e:
+        print(f"输出详细信息时出错: {str(e)}")
+        print("原始结果:", last_result)
 
 def main():
     parser = argparse.ArgumentParser(description='调试单个测试用例或自定义查询')
@@ -231,28 +295,8 @@ def main():
             last_result = evaluate_single_case(case, args.mock_results)
         
         # 显示最后一次评估的详细结果
-        if case['expected_results']:
-            if args.times == 1:  # 单次评估才显示详细评分
-                print("\n评分结果:")
-                print(f"相关性得分: {last_result['relevance_score']:.3f}")
-                print(f"完整性得分: {last_result['completeness_score']:.3f}")
-                print(f"MRR得分: {last_result['mrr_score']:.3f}")
-                print(f"综合得分: {last_result['final_score']:.3f}")
-            
-            print("\n详细信息:")
-            for i, (exp_path, pos) in enumerate(zip(last_result['expected_paths'], last_result['found_positions'])):
-                status = f"在第{pos}位" if pos > 0 else "未找到"
-                score = calculate_relevance_score(pos)
-                mrr = 1.0 / pos if pos > 0 else 0.0
-                print(f"期望结果 {i+1}: {exp_path}")
-                print(f"  - 状态: {status}")
-                print(f"  - 位置得分: {score:.3f}")
-                print(f"  - 倒数排名得分: {mrr:.3f}")
+        print_detailed_results(last_result, args.mock_results)
         
-        print("\n实际返回结果(前10个):")
-        for i, path in enumerate(last_result['actual_results'], 1):
-            print(f"{i}. {path}")
-            
     except Exception as e:
         print(f"错误: {str(e)}", file=sys.stderr)
         sys.exit(1)

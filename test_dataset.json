@@ -31,15 +31,12 @@
     },
     {
       "idx": "fuint-test-002",
-      "query": "在会员登录页面中，需要实现用户登录验证功能",
+      "query": "在会员登录页面中，需要实现用户前端登录验证逻辑",
       "category": "function",
       "description": "测试用户登录功能的检索",
       "expected_results": [
         {
-          "path": "pages/login/index.vue"
-        },
-        {
-          "path": "api/login/index.js"
+          "path": "pages/login/components/main.vue"
         }
       ]
     },
@@ -51,7 +48,15 @@
       "expected_results": [
         {
           "path": "pages/coupon/list.vue"
-        },
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-003-01",
+      "query": "优惠券复用组件",
+      "category": "style",
+      "description": "测试优惠券列表样式的检索",
+      "expected_results": [
         {
           "path": "components/page/coupon/index.vue"
         }
@@ -59,26 +64,12 @@
     },
     {
       "idx": "fuint-test-004",
-      "query": "在结算中心页面中，需要实现订单结算功能",
+      "query": "在商品购买结算页面中，找到优惠券功能",
       "category": "function",
       "description": "测试订单结算功能的检索",
       "expected_results": [
         {
-          "path": "pages/settlement/index.vue"
-        },
-        {
-          "path": "api/settlement.js"
-        }
-      ]
-    },
-    {
-      "idx": "fuint-test-005",
-      "query": "在会员中心页面中，需要优化功能菜单的布局",
-      "category": "layout",
-      "description": "测试会员中心功能菜单布局的检索",
-      "expected_results": [
-        {
-          "path": "pages/user/index.vue"
+          "path": "pages/settlement/goods.vue"
         }
       ]
     },
@@ -93,6 +84,9 @@
         },
         {
           "path": "api/points/exchange.js"
+        },
+        {
+          "path": "pages/points/exchange-detail.vue"
         }
       ]
     },
