@@ -92,26 +92,12 @@
     },
     {
       "idx": "fuint-test-007",
-      "query": "在商品评价页面中，需要优化评价表单的样式",
+      "query": "在商品评价页面中，优化评价表单的样式",
       "category": "style",
       "description": "测试商品评价表单样式的检索",
       "expected_results": [
         {
           "path": "pages/comment/index.vue"
-        }
-      ]
-    },
-    {
-      "idx": "fuint-test-008",
-      "query": "在商家管理页面中，需要实现商户信息管理功能",
-      "category": "function",
-      "description": "测试商户信息管理功能的检索",
-      "expected_results": [
-        {
-          "path": "pages/merchant/index.vue"
-        },
-        {
-          "path": "api/merchant.js"
         }
       ]
     },

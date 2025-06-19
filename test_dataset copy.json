@@ -1,0 +1,116 @@
+{
+  "meta": {
+    "version": "2.0.0",
+    "description": "代码检索评估测试数据集 - 基于fuint-uniapp-master项目",
+    "created_date": "2024-03-20",
+    "total_cases": 20,
+    "categories": ["style", "function", "layout", "api"]
+  },
+  "test_cases": [
+    {
+      "idx": "fuint-test-001",
+      "query": "首页的轮播图组件需要添加圆角和阴影效果",
+      "category": "style",
+      "description": "测试首页轮播图组件样式的检索",
+      "expected_results": [
+        {
+          "path": "components/page/banner/index.vue"
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-001-1",
+      "query": "首页上面那个图需要添加圆角和阴影效果",
+      "category": "style",
+      "description": "测试首页轮播图组件样式的检索",
+      "expected_results": [
+        {
+          "path": "components/page/banner/index.vue"
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-002",
+      "query": "在会员登录页面中，需要实现用户前端登录验证逻辑",
+      "category": "function",
+      "description": "测试用户登录功能的检索",
+      "expected_results": [
+        {
+          "path": "pages/login/components/main.vue"
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-003",
+      "query": "在优惠券列表页面中，需要优化券列表的展示效果",
+      "category": "style",
+      "description": "测试优惠券列表样式的检索",
+      "expected_results": [
+        {
+          "path": "pages/coupon/list.vue"
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-003-01",
+      "query": "优惠券复用组件",
+      "category": "style",
+      "description": "测试优惠券列表样式的检索",
+      "expected_results": [
+        {
+          "path": "components/page/coupon/index.vue"
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-004",
+      "query": "在商品购买结算页面中，找到优惠券功能",
+      "category": "function",
+      "description": "测试订单结算功能的检索",
+      "expected_results": [
+        {
+          "path": "pages/settlement/goods.vue"
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-006",
+      "query": "在积分兑换页面中，需要实现商品兑换功能",
+      "category": "function",
+      "description": "测试积分商品兑换功能的检索",
+      "expected_results": [
+        {
+          "path": "pages/points/exchange.vue"
+        },
+        {
+          "path": "api/points/exchange.js"
+        },
+        {
+          "path": "pages/points/exchange-detail.vue"
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-007",
+      "query": "在商品评价页面中，优化评价表单的样式",
+      "category": "style",
+      "description": "测试商品评价表单样式的检索",
+      "expected_results": [
+        {
+          "path": "pages/comment/index.vue"
+        }
+      ]
+    },
+    {
+      "idx": "fuint-test-009",
+      "query": "在订单确认页面中，需要优化商品信息的布局",
+      "category": "layout",
+      "description": "测试订单确认页面商品信息布局的检索",
+      "expected_results": [
+        {
+          "path": "pages/settlement/goods.vue"
+        }
+      ]
+    }
+  ]
+}

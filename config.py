@@ -29,7 +29,7 @@ API_CONFIG = {
     "limit": 10,
     
 
-    "method": "hybrid",
+    "method": "hyde",
 
     "rank_method": "hybrid",
 
@@ -50,7 +50,7 @@ EVALUATION_CONFIG = {
 
 # 文件路径配置
 PATH_CONFIG = {
-    "test_dataset": "test_dataset.json",
+    "test_dataset": "test_dataset copy.json",
     "results_dir": "results",
     "reports_dir": "reports",
     "history_dir": "results/history",

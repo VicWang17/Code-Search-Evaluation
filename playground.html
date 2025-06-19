@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Search Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: 
+                linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 50%, rgba(15, 52, 96, 0.95) 100%),
+                url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80') center/cover fixed;
+            color: #e0e6ed;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 60px 40px;
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+                rgba(255, 255, 255, 0.02);
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle, rgba(100, 181, 246, 0.1) 0%, transparent 70%);
+            animation: headerGlow 8s ease-in-out infinite;
+        }
+        
+        @keyframes headerGlow {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 50%, #2196f3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 30px rgba(100, 181, 246, 0.3);
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            color: #cfd8dc;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .search-section {
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+                rgba(255, 255, 255, 0.03);
+            padding: 35px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .search-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .search-section:hover::before {
+            left: 100%;
+        }
+
+        .config-section {
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+                rgba(255, 255, 255, 0.03);
+            padding: 35px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .config-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .config-section:hover::before {
+            left: 100%;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #64b5f6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(45deg, #64b5f6, #2196f3);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #cfd8dc;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 15px 20px;
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%),
+                rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 15px;
+            color: #e0e6ed;
+            font-size: 15px;
+            font-weight: 400;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #64b5f6;
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.12) 100%),
+                rgba(100, 181, 246, 0.1);
+            box-shadow: 
+                0 0 0 3px rgba(100, 181, 246, 0.3),
+                0 8px 25px rgba(100, 181, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .form-group input::placeholder, .form-group textarea::placeholder {
+            color: rgba(224, 230, 237, 0.6);
+            font-weight: 300;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 18px 30px;
+            background: 
+                linear-gradient(135deg, #2196f3 0%, #64b5f6 50%, #42a5f5 100%);
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 8px 25px rgba(33, 150, 243, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .search-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+        
+        .search-btn:hover::before {
+            left: 100%;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 12px 35px rgba(33, 150, 243, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .search-btn:active {
+            transform: translateY(-1px) scale(1.01);
+            transition: all 0.1s ease;
+        }
+
+        .search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.2);
+        }
+        
+        .search-btn:disabled::before {
+            display: none;
+        }
+
+        .results-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .results-panel {
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+                rgba(255, 255, 255, 0.03);
+            padding: 35px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .results-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+            transition: left 0.8s;
+        }
+        
+        .results-panel:hover::before {
+            left: 100%;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+                rgba(255, 255, 255, 0.02);
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 18px;
+            border-left: 5px solid #64b5f6;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .result-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(100, 181, 246, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .result-item:hover::before {
+            left: 100%;
+        }
+
+        .result-item:hover {
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%),
+                rgba(100, 181, 246, 0.05);
+            transform: translateX(8px) translateY(-2px);
+            box-shadow: 
+                0 8px 25px rgba(100, 181, 246, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-left-color: #42a5f5;
+        }
+
+        .result-path {
+            font-family: 'Courier New', monospace;
+            color: #81c784;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .result-score {
+            color: #ffb74d;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64b5f6;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #64b5f6;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #ef5350;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+                rgba(255, 255, 255, 0.03);
+            padding: 25px 20px;
+            border-radius: 18px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(100, 181, 246, 0.1), transparent);
+            transition: left 0.6s;
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 
+                0 15px 35px rgba(100, 181, 246, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(100, 181, 246, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            color: #cfd8dc;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.5px;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: 
+                linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 50%, rgba(15, 52, 96, 0.95) 100%),
+                rgba(255, 255, 255, 0.05);
+            margin: 2% auto;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 25px;
+            width: 90%;
+            max-width: 1200px;
+            height: 90%;
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(100, 181, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255, 119, 198, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .modal-header {
+            padding: 25px 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+                rgba(255, 255, 255, 0.03);
+            border-radius: 25px 25px 0 0;
+            backdrop-filter: blur(15px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-title {
+            color: #64b5f6;
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin: 0;
+            font-family: 'Inter', 'Courier New', monospace;
+            background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close {
+            color: #cfd8dc;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .close:hover {
+            color: #64b5f6;
+            background: rgba(100, 181, 246, 0.2);
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 35px;
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .code-container {
+            background: 
+                linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 100%),
+                rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 25px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #e8eaed;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 600px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .code-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .code-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .code-container::-webkit-scrollbar-thumb {
+            background: rgba(100, 181, 246, 0.6);
+            border-radius: 4px;
+        }
+        
+        .code-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 181, 246, 0.8);
+        }
+
+        .file-info {
+            background: 
+                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+                rgba(129, 199, 132, 0.1);
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 25px;
+            border-left: 5px solid #81c784;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(129, 199, 132, 0.2);
+            box-shadow: 0 4px 15px rgba(129, 199, 132, 0.1);
+        }
+
+        .file-path {
+            color: #81c784;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .file-score {
+            color: #ffb74d;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .control-panel, .results-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                height: 95%;
+                margin: 2.5% auto;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Code Search Playground</h1>
+            <p>智能代码检索与分析平台</p>
+        </div>
+
+        <div class="control-panel">
+            <div class="search-section">
+                <h2 class="section-title">搜索查询</h2>
+                <div class="form-group">
+                    <label for="query">查询语句</label>
+                    <textarea id="query" placeholder="输入您的代码搜索查询...">首页的轮播图组件需要添加圆角和阴影效果</textarea>
+                </div>
+                <button class="search-btn" onclick="performSearch()">🚀 执行搜索</button>
+            </div>
+
+            <div class="config-section">
+                <h2 class="section-title">配置参数</h2>
+                <div class="config-grid">
+                    <div class="form-group">
+                        <label for="method">搜索方法</label>
+                        <select id="method">
+                            <option value="original">Original</option>
+                            <option value="hyde" selected>HyDE</option>
+                            <option value="structure">Structure</option>
+                            <option value="hybrid">Hybrid</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="rankMethod">重排方法</label>
+                        <select id="rankMethod">
+                            <option value="vector">Vector</option>
+                            <option value="ai">AI</option>
+                            <option value="hybrid" selected>Hybrid</option>
+                            <option value="model">Model</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectId">项目ID</label>
+                        <input type="text" id="projectId" value="17">
+                    </div>
+                    <div class="form-group">
+                        <label for="limit">结果数量</label>
+                        <input type="number" id="limit" value="10" min="1" max="50">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-panel">
+                <h2 class="section-title">搜索结果</h2>
+                <div id="searchResults">
+                    <div style="text-align: center; padding: 40px; color: #b0bec5;">
+                        <p>🎯 点击"执行搜索"开始检索代码</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-panel">
+                <h2 class="section-title">数据分析</h2>
+                <div class="stats-grid" id="statsGrid" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalResults">0</div>
+                        <div class="stat-label">总结果数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="relevanceScore">0.0</div>
+                        <div class="stat-label">相关性</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="completenessScore">0.0</div>
+                        <div class="stat-label">全面性</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="usabilityScore">0.0</div>
+                        <div class="stat-label">可用性</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalScore">0.0</div>
+                        <div class="stat-label">总分</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="responseTime">0ms</div>
+                        <div class="stat-label">响应时间</div>
+                    </div>
+                </div>
+                <div class="chart-container" id="chartContainer">
+                    <div style="text-align: center; padding: 40px; color: #b0bec5;">
+                        <p>📊 搜索后将显示数据分析图表</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 代码查看模态框 -->
+    <div id="codeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">代码查看</h2>
+                <span class="close" onclick="closeCodeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="file-info">
+                    <div class="file-path" id="modalFilePath">文件路径</div>
+                    <div class="file-score" id="modalFileScore">相关性分数: 0.0000</div>
+                </div>
+                <div class="code-container" id="modalCodeContent">
+                    <div style="text-align: center; padding: 40px; color: #b0bec5;">
+                        <p>📄 正在加载代码内容...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从config.py读取的默认配置
+        const DEFAULT_CONFIG = {
+            base_url: 'http://localhost:8000',
+            endpoint: '/api/search/unified',
+            project_id: '17',
+            limit: 10,
+            method: 'hyde',
+            rank_method: 'hybrid',
+            timeout: 99999
+        };
+
+        let currentResults = [];
+        let chart = null;
+
+        // 初始化图表
+        function initChart() {
+            const chartDom = document.getElementById('chartContainer');
+            chart = echarts.init(chartDom, 'dark');
+            
+            const option = {
+                backgroundColor: 'transparent',
+                title: {
+                    text: '搜索结果分数分布',
+                    textStyle: {
+                        color: '#64b5f6',
+                        fontSize: 16
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    borderColor: '#64b5f6',
+                    textStyle: {
+                        color: '#e0e6ed'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: [],
+                    axisLabel: {
+                        color: '#b0bec5',
+                        rotate: 45
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#37474f'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '相关性分数',
+                    nameTextStyle: {
+                        color: '#b0bec5'
+                    },
+                    axisLabel: {
+                        color: '#b0bec5'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#37474f'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#37474f',
+                            type: 'dashed'
+                        }
+                    }
+                },
+                series: [{
+                    name: '相关性分数',
+                    type: 'bar',
+                    data: [],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#64b5f6' },
+                            { offset: 1, color: '#2196f3' }
+                        ])
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#81c784' },
+                                { offset: 1, color: '#4caf50' }
+                            ])
+                        }
+                    }
+                }]
+            };
+            
+            chart.setOption(option);
+        }
+
+        // 更新图表数据
+        function updateChart(results) {
+            if (!chart || !results || results.length === 0) return;
+            
+            const data = results.map((result, index) => ({
+                name: `结果 ${index + 1}`,
+                value: result.score || 0,
+                path: result.path || 'Unknown'
+            }));
+            
+            const option = {
+                xAxis: {
+                    data: data.map(item => item.name)
+                },
+                series: [{
+                    data: data.map(item => ({
+                        value: item.value,
+                        name: item.path
+                    }))
+                }]
+            };
+            
+            chart.setOption(option);
+        }
+
+        // 更新统计信息
+        function updateStats(results, responseTime, evaluationData = null) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.style.display = 'grid';
+            
+            const totalResults = results.length;
+            
+            // 如果有评估数据，显示评估指标
+            if (evaluationData) {
+                document.getElementById('relevanceScore').textContent = (evaluationData.relevance || 0).toFixed(3);
+                document.getElementById('completenessScore').textContent = (evaluationData.completeness || 0).toFixed(3);
+                document.getElementById('usabilityScore').textContent = (evaluationData.usability || 0).toFixed(3);
+                document.getElementById('totalScore').textContent = (evaluationData.total_score || 0).toFixed(3);
+            } else {
+                // 如果没有评估数据，显示默认值
+                document.getElementById('relevanceScore').textContent = '0.000';
+                document.getElementById('completenessScore').textContent = '0.000';
+                document.getElementById('usabilityScore').textContent = '0.000';
+                document.getElementById('totalScore').textContent = '0.000';
+            }
+            
+            document.getElementById('totalResults').textContent = totalResults;
+            document.getElementById('responseTime').textContent = responseTime + 'ms';
+        }
+
+        // 执行搜索
+        async function performSearch() {
+            const query = document.getElementById('query').value.trim();
+            if (!query) {
+                alert('请输入搜索查询');
+                return;
+            }
+            
+            const method = document.getElementById('method').value;
+            const rankMethod = document.getElementById('rankMethod').value;
+            const projectId = document.getElementById('projectId').value;
+            const limit = parseInt(document.getElementById('limit').value);
+            
+            const searchBtn = document.querySelector('.search-btn');
+            const resultsDiv = document.getElementById('searchResults');
+            
+            // 显示加载状态
+            searchBtn.disabled = true;
+            searchBtn.textContent = '🔄 搜索中...';
+            resultsDiv.innerHTML = '<div class="loading">正在搜索代码...</div>';
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(`${DEFAULT_CONFIG.base_url}${DEFAULT_CONFIG.endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        q: query,
+                        limit: limit,
+                        project_id: projectId,
+                        method: method,
+                        rank_method: rankMethod
+                    })
+                });
+                
+                const responseTime = Date.now() - startTime;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                currentResults = data.results || [];
+                
+                // 显示结果
+                displayResults(currentResults);
+                
+                // 更新统计和图表
+                updateStats(currentResults, responseTime, data.evaluation);
+                updateChart(currentResults);
+                
+            } catch (error) {
+                console.error('搜索错误:', error);
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <strong>搜索失败:</strong> ${error.message}<br>
+                        <small>请检查API服务是否正常运行</small>
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = '🚀 执行搜索';
+            }
+        }
+
+        // 显示搜索结果
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (!results || results.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #b0bec5;">
+                        <p>😔 未找到相关结果</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const resultsHtml = results.map((result, index) => `
+                <div class="result-item" onclick="showCodeModal('${result.path || 'Unknown Path'}', ${result.score || 0}, ${index})">
+                    <div class="result-path">${result.path || 'Unknown Path'}</div>
+                    <div class="result-score">相关性分数: ${(result.score || 0).toFixed(4)}</div>
+                    ${result.content ? `<div style="margin-top: 8px; font-size: 0.9rem; color: #90a4ae; line-height: 1.4;">${result.content.substring(0, 200)}${result.content.length > 200 ? '...' : ''}</div>` : ''}
+                    <div style="margin-top: 8px; font-size: 0.8rem; color: #64b5f6; font-style: italic;">💡 点击查看完整代码</div>
+                </div>
+            `).join('');
+            
+            resultsDiv.innerHTML = resultsHtml;
+        }
+
+        // 显示代码模态框
+        function showCodeModal(filePath, score, index) {
+            const modal = document.getElementById('codeModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalFilePath = document.getElementById('modalFilePath');
+            const modalFileScore = document.getElementById('modalFileScore');
+            const modalCodeContent = document.getElementById('modalCodeContent');
+            
+            // 设置模态框信息
+            modalTitle.textContent = `代码查看 - 结果 ${index + 1}`;
+            modalFilePath.textContent = filePath;
+            modalFileScore.textContent = `相关性分数: ${score.toFixed(4)}`;
+            
+            // 显示加载状态
+            modalCodeContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #b0bec5;">
+                    <p>📄 正在加载代码内容...</p>
+                </div>
+            `;
+            
+            // 显示模态框
+            modal.style.display = 'block';
+            
+            // 获取代码内容
+            fetchCodeContent(filePath, modalCodeContent);
+        }
+        
+        // 关闭代码模态框
+        function closeCodeModal() {
+            const modal = document.getElementById('codeModal');
+            modal.style.display = 'none';
+        }
+        
+        // 获取代码内容
+        async function fetchCodeContent(filePath, contentContainer) {
+            try {
+                // 这里可以调用API获取文件内容
+                // 目前显示模拟内容
+                const mockContent = `// 文件: ${filePath}
+// 这是一个模拟的代码内容展示
+// 在实际应用中，这里会显示真实的文件内容
+
+function searchCode(query) {
+    // 代码搜索逻辑
+    const results = [];
+    
+    // 模拟搜索过程
+    for (let i = 0; i < 10; i++) {
+        results.push({
+            path: \`src/components/Component\${i}.js\`,
+            score: Math.random(),
+            content: \`// 这是组件 \${i} 的代码\\nfunction Component\${i}() {\\n    return <div>Hello World</div>;\\n}\`
+        });
+    }
+    
+    return results;
+}
+
+// 导出函数
+export { searchCode };
+
+// 示例用法
+const query = "${filePath}";
+const searchResults = searchCode(query);
+console.log('搜索结果:', searchResults);`;
+                
+                // 模拟网络延迟
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                contentContainer.innerHTML = `<pre>${mockContent}</pre>`;
+                
+            } catch (error) {
+                contentContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef5350;">
+                        <p>❌ 加载代码内容失败</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+            
+            // 支持回车键搜索
+            document.getElementById('query').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    performSearch();
+                }
+            });
+            
+            // 响应式图表
+            window.addEventListener('resize', function() {
+                if (chart) {
+                    chart.resize();
+                }
+            });
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('codeModal');
+                if (event.target === modal) {
+                    closeCodeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
